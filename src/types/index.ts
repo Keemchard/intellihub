@@ -13,7 +13,14 @@ export const Segment = z.enum(["Consumer", "B2B", "VIP"]);
 export const LaunchType = z.enum(["eagle_eye", "looker", "external_url"]);
 
 /** Resolved server-side; drives the single entitlement-gated CTA. */
-export const AccessState = z.enum(["granted", "pending", "none", "rejected"]);
+export const AccessState = z.enum([
+  "granted",
+  "pending",
+  "none",
+  "rejected",
+  "cancelled",
+  "expired",
+]);
 export type AccessState = z.infer<typeof AccessState>;
 
 export const OwnerUser = z.object({
