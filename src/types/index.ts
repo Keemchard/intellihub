@@ -1,11 +1,6 @@
 import { z } from "zod";
 
-export const ProductType = z.enum([
-  "dashboard",
-  "dataproduct",
-  "kpi",
-  "report",
-]);
+export const ProductType = z.enum(["dashboard", "dataproduct", "kpi", "report"]);
 export type ProductType = z.infer<typeof ProductType>;
 
 export const TrustStatus = z.enum(["Trusted", "In Review"]);
@@ -13,14 +8,7 @@ export const Segment = z.enum(["Consumer", "B2B", "VIP"]);
 export const LaunchType = z.enum(["eagle_eye", "looker", "external_url"]);
 
 /** Resolved server-side; drives the single entitlement-gated CTA. */
-export const AccessState = z.enum([
-  "granted",
-  "pending",
-  "none",
-  "rejected",
-  "cancelled",
-  "expired",
-]);
+export const AccessState = z.enum(["granted", "pending", "none", "rejected"]);
 export type AccessState = z.infer<typeof AccessState>;
 
 export const OwnerUser = z.object({
@@ -46,7 +34,7 @@ export const Product = z.object({
   reviews: z.number(),
   certified: z.boolean(),
   trust: TrustStatus,
-  accessState: AccessState, // DERIVED server-side from the access-request event log
+  accessState: AccessState,          // DERIVED server-side from the access-request event log
   launchType: LaunchType,
   launchUrl: z.string(),
   icon: z.string(),
@@ -81,9 +69,9 @@ export const Kpi = z.object({
   accent: z.string(),
   tags: z.array(z.string()),
   category: z.string(),
-  upstream: z.array(z.string()), // surfaced as "Data Sources & Provenance"
+  upstream: z.array(z.string()),      // surfaced as "Data Sources & Provenance"
   desc: z.string(),
-  definition: z.string(), // inline glossary
+  definition: z.string(),             // inline glossary
   formula: z.string(),
   context: z.string(),
   source: z.string(),
@@ -98,15 +86,7 @@ export type Kpi = z.infer<typeof Kpi>;
 export const RoleTier = z.enum(["Viewer", "CYOD", "Self-Serve"]);
 export type RoleTier = z.infer<typeof RoleTier>;
 
-export const RequestStatus = z.enum([
-  "In Review",
-  "Approved",
-  "Rejected",
-  "More Information Required",
-  "Cancelled",
-  "Pending",
-  "Expired",
-]);
+export const RequestStatus = z.enum(["In Review", "Approved", "Rejected", "More Information Required"]);
 export type RequestStatus = z.infer<typeof RequestStatus>;
 
 /** Client -> BFF submission payload. Validated on both sides with this one schema. */
@@ -142,7 +122,7 @@ export const AccessRequest = z.object({
   roleTier: RoleTier,
   justification: z.string(),
   currentStatus: RequestStatus,
-  providerRef: z.string().nullable(), // AppSheet row key
+  providerRef: z.string().nullable(),   // AppSheet row key
   createdAt: z.string(),
   updatedAt: z.string(),
   events: z.array(AccessRequestEvent),
@@ -161,36 +141,14 @@ export type AccessGrant = z.infer<typeof AccessGrant>;
 /** IntelliBot response contract — stable across keyword router (P1) and GenAI (later). */
 export const BotResponse = z.object({
   intro: z.string(),
-  products: z.array(
-    z.object({
-      id: z.string(),
-      name: z.string(),
-      type: ProductType,
-      icon: z.string(),
-      accent: z.string(),
-      desc: z.string(),
-    }),
-  ),
-  kpis: z.array(
-    z.object({
-      id: z.string(),
-      name: z.string(),
-      value: z.string(),
-      accent: z.string(),
-    }),
-  ),
+  products: z.array(z.object({ id: z.string(), name: z.string(), type: ProductType, icon: z.string(), accent: z.string(), desc: z.string() })),
+  kpis: z.array(z.object({ id: z.string(), name: z.string(), value: z.string(), accent: z.string() })),
   howto: z.string().optional(),
 });
 export type BotResponse = z.infer<typeof BotResponse>;
 
 /** Session identity. Populated by OIDC in production; dev-mock in local. */
-export const RoleName = z.enum([
-  "executive",
-  "territory",
-  "business",
-  "analyst",
-  "intellihub_admin",
-]);
+export const RoleName = z.enum(["executive", "territory", "business", "analyst", "intellihub_admin"]);
 export type RoleName = z.infer<typeof RoleName>;
 
 export const SessionUser = z.object({
@@ -203,8 +161,4 @@ export const SessionUser = z.object({
 });
 export type SessionUser = z.infer<typeof SessionUser>;
 
-export type ApiEnvelope<T> = {
-  data: T;
-  meta?: Record<string, unknown>;
-  error?: null;
-};
+export type ApiEnvelope<T> = { data: T; meta?: Record<string, unknown>; error?: null };

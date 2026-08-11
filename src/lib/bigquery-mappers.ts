@@ -135,6 +135,7 @@ export function fromKpiDetail(row: DSKpiDetailRow): Kpi {
     row.owner?.owner_id,
     row.owner?.owner_name,
     row.owner?.owner_team ?? "Data Owner",
+    row.owner?.initials,
   );
   const thresholds: Array<[string, string, string]> = [];
   if (row.threshold_good) thresholds.push(["Good", row.threshold_good, "#10B981"]);
@@ -164,10 +165,10 @@ export function fromKpiDetail(row: DSKpiDetailRow): Kpi {
     desc: row.kpi_description ?? "",
     definition: row.kpi_description ?? "",
     formula: row.kpi_formula ?? "",
-    context: "",
-    source: upstream[0] ?? "",
-    frequency: normalizeRefresh(row.refresh_frequency),
-    aggregation: "",
+    context: row.business_impact ?? row.interpretation_rules ?? "",
+    source: row.primary_data_product_ids ?? upstream[0] ?? "",
+    frequency: normalizeRefresh(row.time_granularity ?? row.refresh_frequency),
+    aggregation: row.entity_granularity ?? "",
     thresholds,
     relatedProducts: (row.used_in_products ?? []).map((p) => p.slug ?? "").filter((x) => x !== ""),
   };

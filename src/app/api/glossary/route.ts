@@ -16,5 +16,5 @@ export async function GET(req: NextRequest) {
     offset: sp.get("offset") ? Number(sp.get("offset")) : undefined,
   });
 
-  return ok(resp.data, { count: resp.data.length, total: resp.total });
+  return ok(resp.data, resp.meta);
 }

@@ -99,28 +99,14 @@ import { cn } from "@/lib/utils";
 import type { AccessRequest } from "@/types";
 
 const GROUPS = [
-  {
-    id: "open",
-    label: "Open",
-    match: (r: AccessRequest) =>
-      r.currentStatus === "In Review" ||
-      r.currentStatus === "More Information Required",
-  },
-  {
-    id: "approved",
-    label: "Approved",
-    match: (r: AccessRequest) => r.currentStatus === "Approved",
-  },
-  {
-    id: "closed",
-    label: "Rejected",
-    match: (r: AccessRequest) => r.currentStatus === "Rejected",
-  },
+  { id: "open", label: "Open", match: (r: AccessRequest) => r.currentStatus === "In Review" || r.currentStatus === "More Information Required" },
+  { id: "approved", label: "Approved", match: (r: AccessRequest) => r.currentStatus === "Approved" },
+  { id: "closed", label: "Rejected", match: (r: AccessRequest) => r.currentStatus === "Rejected" },
 ] as const;
 
 export function AccessClient() {
   const { data, isLoading } = useMyRequests();
-
+  
   // Tab states for the main pages and sub-pill filters
   const [activeTab, setActiveTab] = useState("overview");
   const [tab, setTab] = useState<(typeof GROUPS)[number]["id"]>("open");
@@ -139,14 +125,15 @@ export function AccessClient() {
 
   return (
     <div className="mx-auto max-w-[1400px] px-6 py-8 text-[#0f172a] antialiased bg-[#f8fafc] min-h-screen">
+      
       {/* GLOBAL SEARCH NAV BAR (Top Mockup representation) */}
       <div className="mb-6 flex max-w-xl items-center relative">
         <span className="absolute left-4 text-slate-400">
           <Icon name="search" size={16} />
         </span>
-        <input
-          type="text"
-          placeholder="Search analytics products, dashboards, KPIs and more..."
+        <input 
+          type="text" 
+          placeholder="Search analytics products, dashboards, KPIs and more..." 
           className="w-full bg-white border border-slate-200/80 pl-11 pr-4 py-2.5 text-xs rounded-xl outline-none shadow-sm focus:border-slate-300"
         />
       </div>
@@ -157,13 +144,8 @@ export function AccessClient() {
           <Icon name="shield-check" size={24} />
         </div>
         <div>
-          <h1 className="text-2xl font-black tracking-tight text-slate-900">
-            Access &amp; Enablement
-          </h1>
-          <p className="mt-1 text-sm text-slate-500">
-            Simplifying onboarding, navigation and access to trusted analytics
-            across NAI.
-          </p>
+          <h1 className="text-2xl font-black tracking-tight text-slate-900">Access &amp; Enablement</h1>
+          <p className="mt-1 text-sm text-slate-500">Simplifying onboarding, navigation and access to trusted analytics across NAI.</p>
         </div>
       </div>
 
@@ -175,9 +157,7 @@ export function AccessClient() {
             onClick={() => setActiveTab(t.id)}
             className={cn(
               "relative whitespace-nowrap px-4 py-3 text-sm font-semibold transition-all duration-200 pb-3 -mb-[1px]",
-              activeTab === t.id
-                ? "text-indigo-600 border-b-2 border-indigo-600 font-bold"
-                : "text-slate-500 hover:text-slate-900",
+              activeTab === t.id ? "text-indigo-600 border-b-2 border-indigo-600 font-bold" : "text-slate-500 hover:text-slate-900"
             )}
           >
             {t.label}
@@ -191,28 +171,15 @@ export function AccessClient() {
           <div className="grid gap-6 md:grid-cols-4">
             <Card className="p-5 border border-slate-100 bg-white rounded-2xl shadow-sm flex items-center justify-between">
               <div className="space-y-2">
-                <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">
-                  My Access Status
-                </span>
+                <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">My Access Status</span>
                 <div className="flex items-baseline gap-2">
                   <span className="text-4xl font-black text-slate-900">12</span>
-                  <span className="text-xs text-slate-400 font-medium">
-                    Total Active
-                  </span>
+                  <span className="text-xs text-slate-400 font-medium">Total Active</span>
                 </div>
                 <div className="text-xs space-y-1 text-slate-500 pt-2">
-                  <div className="flex items-center gap-1.5">
-                    <span className="h-2 w-2 rounded-full bg-emerald-500"></span>{" "}
-                    8 Approved
-                  </div>
-                  <div className="flex items-center gap-1.5">
-                    <span className="h-2 w-2 rounded-full bg-amber-500"></span>{" "}
-                    2 In Review
-                  </div>
-                  <div className="flex items-center gap-1.5">
-                    <span className="h-2 w-2 rounded-full bg-slate-300"></span>{" "}
-                    2 Expired
-                  </div>
+                  <div className="flex items-center gap-1.5"><span className="h-2 w-2 rounded-full bg-emerald-500"></span> 8 Approved</div>
+                  <div className="flex items-center gap-1.5"><span className="h-2 w-2 rounded-full bg-amber-500"></span> 2 In Review</div>
+                  <div className="flex items-center gap-1.5"><span className="h-2 w-2 rounded-full bg-slate-300"></span> 2 Expired</div>
                 </div>
               </div>
               <div className="h-20 w-20 relative flex items-center justify-center rounded-full border-4 border-slate-100 border-t-indigo-600 border-r-emerald-500">
@@ -223,34 +190,16 @@ export function AccessClient() {
             <Card className="p-5 border border-slate-100 bg-white rounded-2xl shadow-sm flex flex-col justify-between">
               <div>
                 <div className="flex items-center gap-2 mb-3 text-slate-700">
-                  <Icon
-                    name="file-text"
-                    size={16}
-                    className="text-indigo-600"
-                  />
-                  <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">
-                    Access Requests
-                  </span>
+                  <Icon name="file-text" size={16} className="text-indigo-600" />
+                  <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Access Requests</span>
                 </div>
                 <div className="space-y-2 text-sm font-medium">
-                  <div className="flex justify-between">
-                    <span>Pending Review</span>
-                    <span className="font-bold text-slate-900">2</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>Approved (This week)</span>
-                    <span className="font-bold text-emerald-600">1</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>Rejected</span>
-                    <span className="font-bold text-slate-900">0</span>
-                  </div>
+                  <div className="flex justify-between"><span>Pending Review</span><span className="font-bold text-slate-900">2</span></div>
+                  <div className="flex justify-between"><span>Approved (This week)</span><span className="font-bold text-emerald-600">1</span></div>
+                  <div className="flex justify-between"><span>Rejected</span><span className="font-bold text-slate-900">0</span></div>
                 </div>
               </div>
-              <button
-                onClick={() => setActiveTab("requests")}
-                className="text-xs font-bold text-indigo-600 hover:underline inline-flex items-center gap-1 pt-3 border-t border-slate-50"
-              >
+              <button onClick={() => setActiveTab("requests")} className="text-xs font-bold text-indigo-600 hover:underline inline-flex items-center gap-1 pt-3 border-t border-slate-50">
                 View all requests <Icon name="arrow-right" size={12} />
               </button>
             </Card>
@@ -258,61 +207,32 @@ export function AccessClient() {
             <Card className="p-5 border border-slate-100 bg-white rounded-2xl shadow-sm flex flex-col justify-between">
               <div>
                 <div className="flex items-center gap-2 mb-3 text-slate-700">
-                  <Icon
-                    name="graduation-cap"
-                    size={16}
-                    className="text-emerald-500"
-                  />
-                  <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">
-                    Onboarding Progress
-                  </span>
+                  <Icon name="graduation-cap" size={16} className="text-emerald-500" />
+                  <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Onboarding Progress</span>
                 </div>
                 <div className="flex items-center gap-4">
-                  <div className="h-14 w-14 rounded-full bg-emerald-50 text-emerald-600 font-black flex items-center justify-center text-sm border-2 border-emerald-500">
-                    75%
-                  </div>
+                  <div className="h-14 w-14 rounded-full bg-emerald-50 text-emerald-600 font-black flex items-center justify-center text-sm border-2 border-emerald-500">75%</div>
                   <div>
-                    <h4 className="text-sm font-bold text-slate-800">
-                      You're doing great!
-                    </h4>
-                    <p className="text-xs text-slate-400">
-                      3 of 4 steps completed.
-                    </p>
+                    <h4 className="text-sm font-bold text-slate-800">You're doing great!</h4>
+                    <p className="text-xs text-slate-400">3 of 4 steps completed.</p>
                   </div>
                 </div>
               </div>
-              <button
-                onClick={() => setActiveTab("onboarding")}
-                className="text-xs font-bold text-indigo-600 hover:underline inline-flex items-center gap-1 pt-3 border-t border-slate-50"
-              >
+              <button onClick={() => setActiveTab("onboarding")} className="text-xs font-bold text-indigo-600 hover:underline inline-flex items-center gap-1 pt-3 border-t border-slate-50">
                 Continue onboarding <Icon name="arrow-right" size={12} />
               </button>
             </Card>
 
             <Card className="p-5 border border-slate-100 bg-white rounded-2xl shadow-sm space-y-3">
-              <span className="text-xs font-bold text-slate-400 uppercase tracking-wider block">
-                Recommended for You
-              </span>
+              <span className="text-xs font-bold text-slate-400 uppercase tracking-wider block">Recommended for You</span>
               <div className="space-y-2">
                 <div className="p-2 border border-slate-100 rounded-xl flex items-center justify-between text-xs font-bold bg-slate-50/50 hover:bg-slate-50 transition cursor-pointer">
-                  <span className="truncate max-w-[200px]">
-                    Network Quality Overview Dashboard
-                  </span>
-                  <Icon
-                    name="chevron-right"
-                    size={12}
-                    className="text-slate-400"
-                  />
+                  <span className="truncate max-w-[200px]">Network Quality Overview Dashboard</span>
+                  <Icon name="chevron-right" size={12} className="text-slate-400" />
                 </div>
                 <div className="p-2 border border-slate-100 rounded-xl flex items-center justify-between text-xs font-bold bg-slate-50/50 hover:bg-slate-50 transition cursor-pointer">
-                  <span className="truncate max-w-[200px]">
-                    Territory Performance Overview
-                  </span>
-                  <Icon
-                    name="chevron-right"
-                    size={12}
-                    className="text-slate-400"
-                  />
+                  <span className="truncate max-w-[200px]">Territory Performance Overview</span>
+                  <Icon name="chevron-right" size={12} className="text-slate-400" />
                 </div>
               </div>
             </Card>
@@ -320,13 +240,8 @@ export function AccessClient() {
 
           <div className="grid gap-6 md:grid-cols-12">
             <Card className="md:col-span-6 p-6 border border-slate-100 bg-white rounded-2xl shadow-sm">
-              <h3 className="font-extrabold text-base text-slate-900 mb-4">
-                Recent System Overview
-              </h3>
-              <p className="text-xs text-slate-500 leading-relaxed">
-                Select the tabs above to drill deeper into comprehensive audit
-                matrices, user onboarding roadmaps, and active access sessions.
-              </p>
+              <h3 className="font-extrabold text-base text-slate-900 mb-4">Recent System Overview</h3>
+              <p className="text-xs text-slate-500 leading-relaxed">Select the tabs above to drill deeper into comprehensive audit matrices, user onboarding roadmaps, and active access sessions.</p>
             </Card>
           </div>
         </div>
@@ -335,53 +250,14 @@ export function AccessClient() {
       {/* TAB CONTENT 2: ACCESS REQUESTS TABLE (UPDATED FROM MOCKUP) */}
       {activeTab === "requests" && (
         <Card className="border border-slate-200/80 bg-white rounded-2xl shadow-sm overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200">
+          
           {/* Action Row containing pill filtering states */}
           <div className="p-5 flex items-center justify-between border-b border-slate-100 flex-wrap gap-4">
             <div className="flex items-center gap-1.5 flex-wrap">
-              <button
-                onClick={() => setTab("open")}
-                className={cn(
-                  "px-3.5 py-1.5 text-xs font-bold rounded-full transition shadow-sm",
-                  tab === "open"
-                    ? "bg-blue-900 text-white"
-                    : "bg-slate-100 text-slate-600 hover:bg-slate-200",
-                )}
-              >
-                All
-              </button>
-              <button
-                onClick={() => setTab("open")}
-                className={cn(
-                  "px-3.5 py-1.5 text-xs font-bold rounded-full transition",
-                  tab === "open"
-                    ? "bg-blue-900 text-white shadow-sm"
-                    : "bg-slate-50 text-slate-500 hover:bg-slate-100",
-                )}
-              >
-                Pending
-              </button>
-              <button
-                onClick={() => setTab("approved")}
-                className={cn(
-                  "px-3.5 py-1.5 text-xs font-bold rounded-full transition",
-                  tab === "approved"
-                    ? "bg-blue-900 text-white shadow-sm"
-                    : "bg-slate-50 text-slate-500 hover:bg-slate-100",
-                )}
-              >
-                Approved
-              </button>
-              <button
-                onClick={() => setTab("closed")}
-                className={cn(
-                  "px-3.5 py-1.5 text-xs font-bold rounded-full transition",
-                  tab === "closed"
-                    ? "bg-blue-900 text-white shadow-sm"
-                    : "bg-slate-50 text-slate-500 hover:bg-slate-100",
-                )}
-              >
-                Rejected
-              </button>
+              <button onClick={() => setTab("open")} className={cn("px-3.5 py-1.5 text-xs font-bold rounded-full transition shadow-sm", tab === "open" ? "bg-blue-900 text-white" : "bg-slate-100 text-slate-600 hover:bg-slate-200")}>All</button>
+              <button onClick={() => setTab("open")} className={cn("px-3.5 py-1.5 text-xs font-bold rounded-full transition", tab === "open" ? "bg-blue-900 text-white shadow-sm" : "bg-slate-50 text-slate-500 hover:bg-slate-100")}>Pending</button>
+              <button onClick={() => setTab("approved")} className={cn("px-3.5 py-1.5 text-xs font-bold rounded-full transition", tab === "approved" ? "bg-blue-900 text-white shadow-sm" : "bg-slate-50 text-slate-500 hover:bg-slate-100")}>Approved</button>
+              <button onClick={() => setTab("closed")} className={cn("px-3.5 py-1.5 text-xs font-bold rounded-full transition", tab === "closed" ? "bg-blue-900 text-white shadow-sm" : "bg-slate-50 text-slate-500 hover:bg-slate-100")}>Rejected</button>
             </div>
             <button className="inline-flex items-center gap-1.5 bg-blue-900 text-white text-xs font-bold px-4 py-2.5 rounded-xl shadow-sm hover:bg-blue-950 transition">
               <Icon name="plus" size={14} /> New Request
@@ -406,31 +282,14 @@ export function AccessClient() {
             ) : rows.length ? (
               <div className="min-w-[800px] divide-y divide-slate-50">
                 {rows.map((req, idx) => (
-                  <div
-                    key={idx}
-                    className="grid grid-cols-12 items-center px-6 py-4 hover:bg-slate-50/30 transition cursor-pointer group"
-                  >
+                  <div key={idx} className="grid grid-cols-12 items-center px-6 py-4 hover:bg-slate-50/30 transition cursor-pointer group">
                     <div className="col-span-5 flex items-center gap-3">
                       <div className="h-8 w-8 rounded-lg bg-indigo-50 border border-indigo-100 flex items-center justify-center text-indigo-600 shrink-0">
-                        <Icon
-                          name={
-                            req.productType === "dashboard"
-                              ? "activity"
-                              : "file-text"
-                          }
-                          size={14}
-                        />
+                        <Icon name={req.productType === "Dashboard" ? "activity" : "file-text"} size={14} />
                       </div>
                       <div className="truncate pr-4">
-                        <h4 className="text-sm font-bold text-slate-800 leading-tight group-hover:text-blue-900 transition">
-                          {req.productName}
-                        </h4>
-                        <p className="text-xs text-slate-400 mt-0.5">
-                          Eagle Eye —{" "}
-                          {req.productType === "dashboard"
-                            ? "CWN"
-                            : "Territory"}
-                        </p>
+                        <h4 className="text-sm font-bold text-slate-800 leading-tight group-hover:text-blue-900 transition">{req.productName}</h4>
+                        <p className="text-xs text-slate-400 mt-0.5">Eagle Eye — {req.productType === "Dashboard" ? "CWN" : "Territory"}</p>
                       </div>
                     </div>
 
@@ -441,62 +300,41 @@ export function AccessClient() {
                     </div>
 
                     <div className="col-span-2">
-                      <span
-                        className={cn(
-                          "text-xs font-medium px-2.5 py-0.5 rounded-full inline-flex items-center gap-1 border",
-                          req.currentStatus === "Approved" &&
-                            "bg-emerald-50 text-emerald-700 border-emerald-200/40",
-                          req.currentStatus === "In Review" &&
-                            "bg-amber-50 text-amber-700 border-amber-200/40",
-                          req.currentStatus === "Expired" &&
-                            "bg-slate-50 text-slate-500 border-slate-200/50",
-                          req.currentStatus === "Pending" &&
-                            "bg-blue-50 text-blue-700 border-blue-200/40",
-                          req.currentStatus === "Rejected" &&
-                            "bg-rose-50 text-rose-700 border-rose-200/40",
-                        )}
-                      >
-                        <span
-                          className={cn(
-                            "h-1.5 w-1.5 rounded-full",
-                            req.currentStatus === "Approved" &&
-                              "bg-emerald-500",
-                            req.currentStatus === "In Review" && "bg-amber-500",
-                            req.currentStatus === "Expired" && "bg-slate-400",
-                            req.currentStatus === "Pending" && "bg-blue-500",
-                            req.currentStatus === "Rejected" && "bg-rose-500",
-                          )}
-                        ></span>
+                      <span className={cn(
+                        "text-xs font-medium px-2.5 py-0.5 rounded-full inline-flex items-center gap-1 border",
+                        req.currentStatus === "Approved" && "bg-emerald-50 text-emerald-700 border-emerald-200/40",
+                        req.currentStatus === "In Review" && "bg-amber-50 text-amber-700 border-amber-200/40",
+                        req.currentStatus === "Expired" && "bg-slate-50 text-slate-500 border-slate-200/50",
+                        req.currentStatus === "Pending" && "bg-blue-50 text-blue-700 border-blue-200/40",
+                        req.currentStatus === "Rejected" && "bg-rose-50 text-rose-700 border-rose-200/40"
+                      )}>
+                        <span className={cn(
+                          "h-1.5 w-1.5 rounded-full",
+                          req.currentStatus === "Approved" && "bg-emerald-500",
+                          req.currentStatus === "In Review" && "bg-amber-500",
+                          req.currentStatus === "Expired" && "bg-slate-400",
+                          req.currentStatus === "Pending" && "bg-blue-500",
+                          req.currentStatus === "Rejected" && "bg-rose-500"
+                        )}></span>
                         {req.currentStatus}
                       </span>
                     </div>
 
                     <div className="col-span-2 text-sm text-slate-500 font-medium">
-                      {new Date(req.updatedAt).toLocaleDateString(undefined, {
-                        month: "short",
-                        day: "numeric",
-                        year: "numeric",
-                      })}
+                      {new Date(req.updatedAt).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" })}
                     </div>
 
                     <div className="col-span-1 flex items-center justify-between pr-2">
                       <div className="h-6 w-6 rounded-full flex items-center justify-center text-[10px] font-bold text-white uppercase shadow-sm bg-indigo-500">
                         {req.productName.substring(0, 2)}
                       </div>
-                      <Icon
-                        name="chevron-right"
-                        size={14}
-                        className="text-slate-300 group-hover:text-slate-500 group-hover:translate-x-0.5 transition"
-                      />
+                      <Icon name="chevron-right" size={14} className="text-slate-300 group-hover:text-slate-500 group-hover:translate-x-0.5 transition" />
                     </div>
                   </div>
                 ))}
               </div>
             ) : (
-              <EmptyState
-                title="No match records found"
-                sub="Adjust sub-tabs filter selection parameters."
-              />
+              <EmptyState title="No match records found" sub="Adjust sub-tabs filter selection parameters." />
             )}
           </div>
         </Card>
@@ -506,44 +344,26 @@ export function AccessClient() {
       {activeTab === "my-access" && (
         <Card className="p-6 border border-slate-100 bg-white rounded-2xl shadow-sm text-center py-12">
           <Icon name="lock" size={32} className="mx-auto text-slate-300 mb-2" />
-          <h3 className="font-extrabold text-base text-slate-900">
-            My Authorized Access Nodes
-          </h3>
-          <p className="text-xs text-slate-400 mt-1 max-w-sm mx-auto">
-            Active network profiles authenticated to your credentials dashboard
-            module display here.
-          </p>
+          <h3 className="font-extrabold text-base text-slate-900">My Authorized Access Nodes</h3>
+          <p className="text-xs text-slate-400 mt-1 max-w-sm mx-auto">Active network profiles authenticated to your credentials dashboard module display here.</p>
         </Card>
       )}
 
       {activeTab === "onboarding" && (
         <Card className="p-6 border border-slate-100 bg-white rounded-2xl shadow-sm space-y-4">
-          <h3 className="font-extrabold text-base text-slate-900">
-            Onboarding Checklist
-          </h3>
-          <p className="text-xs text-slate-400">
-            Complete these baseline workspace setups to configure target NAI
-            asset permissions.
-          </p>
+          <h3 className="font-extrabold text-base text-slate-900">Onboarding Checklist</h3>
+          <p className="text-xs text-slate-400">Complete these baseline workspace setups to configure target NAI asset permissions.</p>
         </Card>
       )}
 
       {activeTab === "navigation" && (
         <Card className="p-6 border border-slate-100 bg-white rounded-2xl shadow-sm text-center py-12">
-          <Icon
-            name="compass"
-            size={32}
-            className="mx-auto text-slate-300 mb-2"
-          />
-          <h3 className="font-extrabold text-base text-slate-900">
-            Guided Product Navigation Engine
-          </h3>
-          <p className="text-xs text-slate-400 mt-1 max-w-sm mx-auto">
-            Input functional goals above to calculate automated pathway
-            mappings.
-          </p>
+          <Icon name="compass" size={32} className="mx-auto text-slate-300 mb-2" />
+          <h3 className="font-extrabold text-base text-slate-900">Guided Product Navigation Engine</h3>
+          <p className="text-xs text-slate-400 mt-1 max-w-sm mx-auto">Input functional goals above to calculate automated pathway mappings.</p>
         </Card>
       )}
+
     </div>
   );
 }

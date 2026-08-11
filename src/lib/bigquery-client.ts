@@ -3,11 +3,17 @@ import "server-only";
 const BASE = process.env.INTELLIHUB_API_URL;
 const API_KEY = process.env.INTELLIHUB_API_KEY;
 
-export interface BqPage<T> {
-  data: T[];
-  total: number;
+export interface BqMeta {
+  totalCount: number;
   limit: number;
   offset: number;
+  hasNextPage: boolean;
+  hasPrevPage: boolean;
+}
+
+export interface BqPage<T> {
+  data: T[];
+  meta: BqMeta;
 }
 
 // ─── DTOs ─────────────────────────────────────────────────────────────────────
@@ -77,16 +83,29 @@ export interface DSKpiDetailRow {
   threshold_warning: string | null;
   threshold_critical: string | null;
   refresh_frequency: string | null;
+  time_granularity: string | null;
+  entity_granularity: string | null;
   certification_status: string | null;
   kpi_status: string | null;
   data_classification: string | null;
-  last_reviewed_date: string | null;
+  last_reviewed_date: { value: string } | null;
+  business_impact: string | null;
+  typical_questions: string | null;
+  interpretation_rules: string | null;
+  data_owner: string | null;
+  business_rule_owner: string | null;
+  data_steward: string | null;
+  primary_data_product_ids: string | null;
+  contains_pii: boolean | null;
+  domain_id: string | null;
   domain: { domain_id: string | null; domain_name: string | null } | null;
   owner: {
     owner_id: string | null;
     owner_name: string | null;
+    initials: string | null;
     owner_email: string | null;
     owner_team: string | null;
+    is_active: boolean | null;
   } | null;
   used_in_products: Array<{
     data_product_id: string | null;

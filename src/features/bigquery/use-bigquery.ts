@@ -1,5 +1,5 @@
 "use client";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useInfiniteQuery } from "@tanstack/react-query";
 import { qk } from "@/lib/query/keys";
 import type {
   DSMarketplaceSvRow,
@@ -22,7 +22,13 @@ type Opts = { enabled?: boolean; staleTime?: number };
 
 interface BqResult<T> {
   data: T[];
-  meta: { total: number; limit: number; offset: number };
+  meta: {
+    totalCount: number;
+    limit: number;
+    offset: number;
+    hasNextPage: boolean;
+    hasPrevPage: boolean;
+  };
 }
 
 async function fetchBqEndpoint<T>(endpoint: string, params: Params = {}): Promise<BqResult<T>> {
@@ -77,5 +83,62 @@ export function useSearchIndex(params?: Params, opts?: Opts) {
     queryKey: qk.bq.searchIndex(params),
     queryFn: () => fetchBqEndpoint<DSSearchIndexRow>("ds_search_index_sv", params),
     ...opts,
+  });
+}
+
+const PAGE_SIZE = 10;
+
+// ─── Infinite (server-side pagination) ────────────────────────────────────────
+
+/**
+ * Paginated marketplace hook. baseParams (without offset/limit) are used both as
+ * the cache key discriminator and forwarded to the API. Pass client-side-only
+ * filter keys (prefixed _) to force a cache reset without sending them to the API.
+ */
+export function useMarketplaceInfinite(
+  baseParams?: Omit<Params, "limit" | "offset">,
+  opts?: Opts,
+) {
+  const apiParams = Object.fromEntries(
+    Object.entries(baseParams ?? {}).filter(([k]) => !k.startsWith("_")),
+  );
+  return useInfiniteQuery({
+    queryKey: ["bq", "marketplace", "infinite", baseParams ?? {}],
+    initialPageParam: 0,
+    queryFn: ({ pageParam }) =>
+      fetchBqEndpoint<DSMarketplaceSvRow>("ds_marketplace_sv", {
+        ...apiParams,
+        limit: PAGE_SIZE,
+        offset: pageParam as number,
+      }),
+    getNextPageParam: (lastPage, allPages) =>
+      lastPage.meta.hasNextPage
+        ? allPages.reduce((n, p) => n + p.data.length, 0)
+        : undefined,
+    enabled: opts?.enabled,
+  });
+}
+
+export function useKpiDetailInfinite(
+  baseParams?: Omit<Params, "limit" | "offset">,
+  opts?: Opts,
+) {
+  const apiParams = Object.fromEntries(
+    Object.entries(baseParams ?? {}).filter(([k]) => !k.startsWith("_")),
+  );
+  return useInfiniteQuery({
+    queryKey: ["bq", "kpi_detail", "infinite", baseParams ?? {}],
+    initialPageParam: 0,
+    queryFn: ({ pageParam }) =>
+      fetchBqEndpoint<DSKpiDetailRow>("ds_kpi_detail_sv", {
+        ...apiParams,
+        limit: PAGE_SIZE,
+        offset: pageParam as number,
+      }),
+    getNextPageParam: (lastPage, allPages) =>
+      lastPage.meta.hasNextPage
+        ? allPages.reduce((n, p) => n + p.data.length, 0)
+        : undefined,
+    enabled: opts?.enabled,
   });
 }

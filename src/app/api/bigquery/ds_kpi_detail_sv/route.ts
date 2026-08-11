@@ -9,5 +9,5 @@ export async function GET(req: NextRequest) {
   const params: Record<string, string> = {};
   req.nextUrl.searchParams.forEach((v, k) => { params[k] = v; });
   const resp = await bq.kpiDetail(params);
-  return ok(resp.data, { total: resp.total, limit: resp.limit, offset: resp.offset });
+  return ok(resp.data, resp.meta);
 }
