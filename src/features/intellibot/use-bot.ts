@@ -9,7 +9,7 @@ export function useBotConversation() {
   const [turns, setTurns] = useState<Turn[]>([]);
   const mutation = useMutation({
     mutationFn: async (query: string): Promise<BotResponse> => {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_BASE_PATH}/api/intellibot/query`, {
+      const res = await fetch("/api/intellibot/query", {
         method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ query }),
       });
       if (!res.ok) throw new Error("IntelliBot is unavailable");

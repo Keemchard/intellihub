@@ -2,20 +2,45 @@ import { Icon } from "@/components/shared/icon";
 import { cn } from "@/lib/utils";
 import type { AccessRequestEvent, RequestStatus } from "@/types";
 
-const STYLE: Record<RequestStatus, { icon: string; dot: string; text: string }> = {
+const STYLE: Record<
+  RequestStatus,
+  { icon: string; dot: string; text: string }
+> = {
   "In Review": { icon: "clock", dot: "bg-amber-500", text: "text-amber-600" },
-  Approved: { icon: "check-circle", dot: "bg-emerald-500", text: "text-emerald-600" },
+  Approved: {
+    icon: "check-circle",
+    dot: "bg-emerald-500",
+    text: "text-emerald-600",
+  },
   Rejected: { icon: "shield-check", dot: "bg-rose-500", text: "text-rose-600" },
-  "More Information Required": { icon: "help-circle", dot: "bg-sky-500", text: "text-sky-600" },
-  Expired: { icon: "x-circle", dot: "bg-slate-400", text: "text-slate-500" },
-  Pending: { icon: "clock", dot: "bg-amber-400", text: "text-amber-500" },
+  "More Information Required": {
+    icon: "help-circle",
+    dot: "bg-sky-500",
+    text: "text-sky-600",
+  },
+  Expired: {
+    icon: "",
+    dot: "",
+    text: "",
+  },
+  Pending: {
+    icon: "",
+    dot: "",
+    text: "",
+  },
 };
 
 export function StatusBadge({ status }: { status: RequestStatus }) {
   const s = STYLE[status];
   return (
-    <span className={cn("inline-flex items-center gap-1.5 text-xs font-bold", s.text)}>
-      <Icon name={s.icon} size={13} />{status}
+    <span
+      className={cn(
+        "inline-flex items-center gap-1.5 text-xs font-bold",
+        s.text,
+      )}
+    >
+      <Icon name={s.icon} size={13} />
+      {status}
     </span>
   );
 }
@@ -29,14 +54,25 @@ export function StatusTimeline({ events }: { events: AccessRequestEvent[] }) {
         const last = i === events.length - 1;
         return (
           <li key={e.id} className={cn("relative", !last && "pb-5")}>
-            <span className={cn("absolute -left-[27px] top-1 h-3 w-3 rounded-full ring-4 ring-card", s.dot)} />
+            <span
+              className={cn(
+                "absolute -left-[27px] top-1 h-3 w-3 rounded-full ring-4 ring-card",
+                s.dot,
+              )}
+            />
             <div className="flex flex-wrap items-baseline gap-x-2">
               <StatusBadge status={e.status} />
               <span className="text-xs text-muted-foreground">
-                {new Date(e.at).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" })}
+                {new Date(e.at).toLocaleDateString(undefined, {
+                  month: "short",
+                  day: "numeric",
+                  year: "numeric",
+                })}
               </span>
             </div>
-            {e.note && <p className="mt-1 text-sm text-muted-foreground">{e.note}</p>}
+            {e.note && (
+              <p className="mt-1 text-sm text-muted-foreground">{e.note}</p>
+            )}
             <p className="mt-0.5 text-xs text-muted-foreground">by {e.actor}</p>
           </li>
         );

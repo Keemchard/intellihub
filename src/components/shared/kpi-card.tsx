@@ -8,19 +8,12 @@ export function KpiCard({ k }: { k: Kpi }) {
     <Link href={`/kpi/${k.id}`} className="ring-focus block rounded-2xl">
       <Card className="h-full p-5 transition hover:-translate-y-0.5 hover:shadow-float">
         <div className="mb-3 flex items-start justify-between">
-          <span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-            {k.category}
-          </span>
+          <span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">{k.category}</span>
           <TrustBadge trust={k.trust} />
         </div>
-        <h3 className="truncate font-bold text-foreground" title={k.short}>{k.short}</h3>
+        <h3 className="font-bold text-foreground">{k.name}</h3>
         <div className="mt-3 flex items-end gap-3">
-          <span
-            className="text-3xl font-extrabold tracking-tight"
-            style={{ color: k.accent }}
-          >
-            {k.value}
-          </span>
+          <span className="text-3xl font-extrabold tracking-tight" style={{ color: k.accent }}>{k.value}</span>
           <TrendChip trend={k.trend} dir={k.trendDir} />
         </div>
         <div className="mt-4 flex items-center gap-2 border-t border-border pt-3">

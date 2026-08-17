@@ -1,6 +1,6 @@
 "use client";
 import { useMemo, useState } from "react";
-import { useSearchParams, useRouter } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import {
   useMarketplace,
@@ -8,11 +8,7 @@ import {
   useKpiDetailInfinite,
   useSearchIndex,
 } from "@/features/bigquery/use-bigquery";
-import {
-  fromMarketplace,
-  fromKpiDetail,
-  pickColor,
-} from "@/lib/bigquery-mappers";
+import { fromMarketplace, fromKpiDetail, pickColor } from "@/lib/bigquery-mappers";
 import { FilterGroup } from "./filter-group";
 import { ProductRow } from "@/components/shared/product-card";
 import { KpiCard } from "@/components/shared/kpi-card";
@@ -21,63 +17,83 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Icon } from "@/components/shared/icon";
 import { cn } from "@/lib/utils";
 import type { DSSearchIndexRow } from "@/features/bigquery/use-bigquery";
-import SeeMoreButton from "./components/SeeMorebutton";
-import entityHref from "./utils/entityHref";
-import SearchResultRow from "./components/SearchResultRow";
 
 const TYPE_TABS = [
-  { id: "all", label: "All" },
-  { id: "dashboard", label: "Dashboards" },
-  { id: "dataproduct", label: "Data Products" },
-  { id: "kpi", label: "KPIs" },
-  { id: "report", label: "Reports" },
+  { id: "all", label: "All" }, { id: "dashboard", label: "Dashboards" },
+  { id: "dataproduct", label: "Data Products" }, { id: "kpi", label: "KPIs" }, { id: "report", label: "Reports" },
 ];
 
-export const ENTITY_ICONS: Record<string, string> = {
+const ENTITY_ICONS: Record<string, string> = {
   data_product: "database",
   kpi: "trending-up",
   glossary: "book-open",
 };
 
+function entityHref(r: DSSearchIndexRow): string {
+  if (!r.id) return "/marketplace";
+  if (r.entity_type === "data_product") return `/product/${r.id}`;
+  if (r.entity_type === "kpi") return `/kpi/${r.id}`;
+  return "/glossary";
+}
+
+function SearchResultRow({ r }: { r: DSSearchIndexRow }) {
+  return (
+    <Link
+      href={entityHref(r)}
+      className="flex items-center gap-4 rounded-2xl border border-slate-200 bg-white px-5 py-4 transition hover:border-slate-300 hover:shadow-sm"
+    >
+      <div
+        className="grid h-10 w-10 shrink-0 place-items-center rounded-xl"
+        style={{ background: `${pickColor(r.entity_type)}1a`, color: pickColor(r.entity_type) }}
+      >
+        <Icon name={ENTITY_ICONS[r.entity_type ?? ""] ?? "search"} size={18} />
+      </div>
+      <div className="min-w-0 flex-1">
+        <div className="truncate text-sm font-semibold text-slate-900">{r.title}</div>
+        {r.subtitle && <div className="truncate text-xs text-slate-500">{r.subtitle}</div>}
+      </div>
+      <div className="flex shrink-0 items-center gap-2">
+        {r.certification_status && (
+          <span className="rounded-md bg-slate-100 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-slate-500">
+            {r.certification_status}
+          </span>
+        )}
+        {r.entity_type && (
+          <span className="rounded-md bg-indigo-50 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-indigo-600">
+            {r.entity_type.replace(/_/g, " ")}
+          </span>
+        )}
+        <Icon name="arrow-right" size={15} className="text-slate-400" />
+      </div>
+    </Link>
+  );
+}
+
+function SeeMoreButton({ onClick, isFetching }: { onClick: () => void; isFetching: boolean }) {
+  return (
+    <button
+      onClick={onClick}
+      disabled={isFetching}
+      className="mt-4 flex w-full items-center justify-center gap-2 rounded-2xl border border-slate-200 bg-white py-3 text-sm font-semibold text-slate-600 transition hover:bg-slate-50 disabled:opacity-50"
+    >
+      {isFetching
+        ? <Icon name="loader" size={16} className="animate-spin" />
+        : <Icon name="chevron-down" size={16} />}
+      {isFetching ? "Loading…" : "See more"}
+    </button>
+  );
+}
+
 export function MarketplaceClient() {
   const sp = useSearchParams();
-  const router = useRouter();
   const q = sp.get("q") ?? "";
-  const type = sp.get("product_type") ?? "all";
-  const domains = useMemo(
-    () => sp.get("domain_name")?.split(",").filter(Boolean) ?? [],
-    [sp],
-  );
-  const segments = useMemo(
-    () => sp.get("segments")?.split(",").filter(Boolean) ?? [],
-    [sp],
-  );
-  const certs = useMemo(
-    () => sp.get("certification_status")?.split(",").filter(Boolean) ?? [],
-    [sp],
-  );
+  const [type, setType] = useState("all");
+  const [domains, setDomains] = useState<string[]>([]);
+  const [segments, setSegments] = useState<string[]>([]);
+  const [certs, setCerts] = useState<string[]>([]);
   const [showFilters, setShowFilters] = useState(false);
-
-  function updateParams(updates: Record<string, string | string[] | null>) {
-    const nextParams = new URLSearchParams(window.location.search);
-    for (const [key, value] of Object.entries(updates)) {
-      if (!value || (Array.isArray(value) && value.length === 0)) {
-        nextParams.delete(key);
-      } else if (Array.isArray(value)) {
-        nextParams.set(key, value.join(","));
-      } else {
-        nextParams.set(key, value);
-      }
-    }
-    router.replace(`?${nextParams.toString()}`);
-  }
-
-  const toggle = (key: string, current: string[]) => (v: string) => {
-    const next = current.includes(v)
-      ? current.filter((x) => x !== v)
-      : [...current, v];
-    updateParams({ [key]: next });
-  };
+  const toggle = (set: React.Dispatch<React.SetStateAction<string[]>>) => (v: string) =>
+    set((p) => (p.includes(v) ? p.filter((x) => x !== v) : [...p, v]));
 
   const isSearching = q.length > 0;
   const showKpis = type === "kpi";
@@ -89,10 +105,8 @@ export function MarketplaceClient() {
   );
   const allSearchResults = searchData?.data ?? [];
   const searchResults = useMemo(() => {
-    if (showKpis)
-      return allSearchResults.filter((r) => r.entity_type === "kpi");
-    if (type !== "all")
-      return allSearchResults.filter((r) => r.entity_type === "data_product");
+    if (showKpis) return allSearchResults.filter((r) => r.entity_type === "kpi");
+    if (type !== "all") return allSearchResults.filter((r) => r.entity_type === "data_product");
     return allSearchResults;
   }, [allSearchResults, type, showKpis]);
 
@@ -101,68 +115,43 @@ export function MarketplaceClient() {
   const facets = useMemo(() => {
     const rows = facetData?.data ?? [];
     return {
-      domains: [
-        ...new Set(
-          rows.map((r) => r.domain_name).filter((d): d is string => !!d),
-        ),
-      ].sort(),
+      domains: [...new Set(rows.map((r) => r.domain_name).filter((d): d is string => !!d))].sort(),
       segments: ["Consumer", "B2B", "VIP"],
       certification: ["Certified", "Validated", "Ongoing Review"],
       tags: [...new Set(rows.flatMap((r) => r.tags ?? []))].sort(),
     };
   }, [facetData]);
 
-  const prodKey = useMemo(() => {
-    const params: Record<string, string> = {};
-    sp.forEach((value, key) => {
-      if (key === "q" || key === "segments") return;
-      if (key === "product_type" && (value === "all" || value === "kpi"))
-        return;
-      params[key] = value;
-    });
-    return params;
-  }, [sp]);
-
+  const prodKey = {
+    _type: type !== "all" && type !== "kpi" ? type : undefined,
+    _domains: domains.join(",") || undefined,
+    _segments: segments.join(",") || undefined,
+    _certs: certs.join(",") || undefined,
+  };
   const {
-    data: prodPages,
-    fetchNextPage: fetchMoreProducts,
-    hasNextPage: hasMoreProducts,
-    isFetchingNextPage: fetchingMoreProducts,
+    data: prodPages, fetchNextPage: fetchMoreProducts,
+    hasNextPage: hasMoreProducts, isFetchingNextPage: fetchingMoreProducts,
     isLoading: productsLoading,
   } = useMarketplaceInfinite(prodKey, { enabled: !isSearching });
 
-  const allProductRows = useMemo(
-    () => prodPages?.pages.flatMap((p) => p.data) ?? [],
-    [prodPages],
-  );
+  const allProductRows = useMemo(() => prodPages?.pages.flatMap((p) => p.data) ?? [], [prodPages]);
   const filteredProducts = useMemo(() => {
-    let out = allProductRows.map((r) => ({
-      ...fromMarketplace(r),
-      accessState: "none" as const,
-    }));
-    // if (type !== "all" && type !== "kpi")
-    //   out = out.filter((p) => p.type === type);
+    let out = allProductRows.map((r) => ({ ...fromMarketplace(r), accessState: "none" as const }));
+    if (type !== "all" && type !== "kpi") out = out.filter((p) => p.type === type);
     if (domains.length) out = out.filter((p) => domains.includes(p.domain));
     if (segments.length) out = out.filter((p) => segments.includes(p.segment));
-    if (certs.length)
-      out = out.filter((p) =>
-        certs.some((c) =>
-          c === "Certified"
-            ? p.certified
-            : c === "validated"
-              ? p.trust === "Trusted"
-              : p.trust === "In Review",
-        ),
-      );
+    if (certs.length) out = out.filter((p) =>
+      certs.some((c) =>
+        c === "Certified" ? p.certified : c === "Validated" ? p.trust === "Trusted" : p.trust === "In Review",
+      ),
+    );
     return out;
   }, [allProductRows, type, domains, segments, certs]);
 
   const kpiKey = {};
   const {
-    data: kpiPages,
-    fetchNextPage: fetchMoreKpis,
-    hasNextPage: hasMoreKpis,
-    isFetchingNextPage: fetchingMoreKpis,
+    data: kpiPages, fetchNextPage: fetchMoreKpis,
+    hasNextPage: hasMoreKpis, isFetchingNextPage: fetchingMoreKpis,
     isLoading: kpisLoading,
   } = useKpiDetailInfinite(kpiKey, { enabled: !isSearching });
 
@@ -180,12 +169,9 @@ export function MarketplaceClient() {
           <Icon name="grid" size={20} />
         </div>
         <div>
-          <h1 className="text-2xl font-black tracking-tight text-[#0f172a]">
-            Analytics Marketplace
-          </h1>
+          <h1 className="text-2xl font-black tracking-tight text-[#0f172a]">Analytics Marketplace</h1>
           <p className="mt-1 text-sm text-slate-500">
-            Centralised discovery for every analytics product, dashboard and KPI
-            across NAI.
+            Centralised discovery for every analytics product, dashboard and KPI across NAI.
           </p>
         </div>
       </div>
@@ -203,11 +189,7 @@ export function MarketplaceClient() {
               const nextParams = new URLSearchParams(window.location.search);
               if (e.target.value) nextParams.set("q", e.target.value);
               else nextParams.delete("q");
-              window.history.replaceState(
-                null,
-                "",
-                `?${nextParams.toString()}`,
-              );
+              window.history.replaceState(null, "", `?${nextParams.toString()}`);
             }}
             className="w-full rounded-2xl border border-slate-200 bg-white py-3 pl-11 pr-4 text-sm text-slate-900 placeholder-slate-400 outline-none transition focus:border-slate-300 focus:ring-1 focus:ring-slate-200"
           />
@@ -235,18 +217,10 @@ export function MarketplaceClient() {
       {showFilters && !isSearching && !showKpis && (
         <div className="mb-6 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm animate-in fade-in slide-in-from-top-2 duration-200">
           <div className="mb-3 flex items-center justify-between border-b border-slate-100 pb-2">
-            <span className="text-xs font-bold uppercase tracking-wider text-slate-400">
-              Active Filters
-            </span>
+            <span className="text-xs font-bold uppercase tracking-wider text-slate-400">Active Filters</span>
             {activeFilters > 0 && (
               <button
-                onClick={() =>
-                  updateParams({
-                    domain_name: null,
-                    segments: null,
-                    certification_status: null,
-                  })
-                }
+                onClick={() => { setDomains([]); setSegments([]); setCerts([]); }}
                 className="text-xs font-semibold text-primary hover:underline"
               >
                 Clear all filters
@@ -254,24 +228,9 @@ export function MarketplaceClient() {
             )}
           </div>
           <div className="grid gap-6 sm:grid-cols-3">
-            <FilterGroup
-              title="Domain"
-              options={facets.domains}
-              value={domains}
-              onToggle={toggle("domain_name", domains)}
-            />
-            <FilterGroup
-              title="Segment"
-              options={facets.segments}
-              value={segments}
-              onToggle={toggle("segments", segments)}
-            />
-            <FilterGroup
-              title="Certification"
-              options={facets.certification}
-              value={certs}
-              onToggle={toggle("certification_status", certs)}
-            />
+            <FilterGroup title="Domain" options={facets.domains} value={domains} onToggle={toggle(setDomains)} />
+            <FilterGroup title="Segment" options={facets.segments} value={segments} onToggle={toggle(setSegments)} />
+            <FilterGroup title="Certification" options={facets.certification} value={certs} onToggle={toggle(setCerts)} />
           </div>
         </div>
       )}
@@ -280,23 +239,14 @@ export function MarketplaceClient() {
         {TYPE_TABS.map((t) => (
           <button
             key={t.id}
-            onClick={() => {
-              updateParams({
-                product_type: t.id === "all" ? null : t.id,
-              });
-              if (t.id === "kpi") setShowFilters(false);
-            }}
+            onClick={() => { setType(t.id); if (t.id === "kpi") setShowFilters(false); }}
             className={cn(
               "relative whitespace-nowrap px-4 py-3 text-sm font-semibold transition ring-focus",
-              type === t.id
-                ? "text-slate-900"
-                : "text-slate-400 hover:text-slate-600",
+              type === t.id ? "text-slate-900" : "text-slate-400 hover:text-slate-600",
             )}
           >
             {t.label}
-            {type === t.id && (
-              <span className="grad-brand absolute inset-x-3 -bottom-px h-[2.5px] rounded-full" />
-            )}
+            {type === t.id && <span className="grad-brand absolute inset-x-3 -bottom-px h-[2.5px] rounded-full" />}
           </button>
         ))}
       </div>
@@ -306,20 +256,13 @@ export function MarketplaceClient() {
         {isSearching ? (
           <>
             <p className="mb-4 text-sm text-slate-500">
-              Showing results for &ldquo;
-              <span className="font-semibold text-slate-900">{q}</span>&rdquo;
+              Showing results for &ldquo;<span className="font-semibold text-slate-900">{q}</span>&rdquo;
               {!searchLoading && (
-                <span className="ml-1 text-slate-400">
-                  · {searchResults.length} found
-                </span>
+                <span className="ml-1 text-slate-400">· {searchResults.length} found</span>
               )}
             </p>
             {searchLoading ? (
-              <div className="space-y-3">
-                {Array.from({ length: 5 }).map((_, i) => (
-                  <Skeleton key={i} className="h-[72px]" />
-                ))}
-              </div>
+              <div className="space-y-3">{Array.from({ length: 5 }).map((_, i) => <Skeleton key={i} className="h-[72px]" />)}</div>
             ) : searchResults.length > 0 ? (
               <div className="space-y-2">
                 {searchResults.map((r) => (
@@ -327,130 +270,84 @@ export function MarketplaceClient() {
                 ))}
               </div>
             ) : (
-              <EmptyState
-                title="No results found"
-                sub="Try a different search term."
-              />
-            )}
-          </>
-        ) : /* ── Browse mode ─────────────────────────────────────────────── */
-        type === "all" ? (
-          <>
-            {/* Products section */}
-            {productsLoading ? (
-              <ListSkeleton />
-            ) : filteredProducts.length > 0 ? (
-              <section className="mb-8">
-                <div className="mb-3 flex items-center gap-2 border-b border-slate-100 pb-2">
-                  <h2 className="text-xs font-bold uppercase tracking-wider text-slate-400">
-                    Products &amp; Dashboards
-                  </h2>
-                  <span className="text-xs text-slate-300">·</span>
-                  <span className="text-xs text-slate-400">
-                    {filteredProducts.length}
-                  </span>
-                </div>
-                <div data-stagger className="space-y-3">
-                  {filteredProducts.map((p) => (
-                    <ProductRow key={p.id} p={p} />
-                  ))}
-                </div>
-                {hasMoreProducts && (
-                  <SeeMoreButton
-                    onClick={() => fetchMoreProducts()}
-                    isFetching={fetchingMoreProducts}
-                  />
-                )}
-              </section>
-            ) : null}
-
-            {/* KPIs section — hidden when product filters are active */}
-            {!activeFilters &&
-              (kpisLoading ? (
-                <GridSkeleton />
-              ) : allKpis.length > 0 ? (
-                <section>
-                  <div className="mb-3 flex items-center gap-2 border-b border-slate-100 pb-2">
-                    <h2 className="text-xs font-bold uppercase tracking-wider text-slate-400">
-                      KPIs
-                    </h2>
-                    <span className="text-xs text-slate-300">·</span>
-                    <span className="text-xs text-slate-400">
-                      {allKpis.length}
-                    </span>
-                  </div>
-                  <div
-                    data-stagger
-                    className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3"
-                  >
-                    {allKpis.map((k) => (
-                      <KpiCard key={k.id} k={k} />
-                    ))}
-                  </div>
-                  {hasMoreKpis && (
-                    <SeeMoreButton
-                      onClick={() => fetchMoreKpis()}
-                      isFetching={fetchingMoreKpis}
-                    />
-                  )}
-                </section>
-              ) : null)}
-
-            {!productsLoading &&
-              filteredProducts.length === 0 &&
-              (!activeFilters
-                ? !kpisLoading && allKpis.length === 0
-                : true) && (
-                <EmptyState
-                  title="No results found"
-                  sub="Try adjusting your filters."
-                />
-              )}
-          </>
-        ) : showKpis ? (
-          kpisLoading ? (
-            <GridSkeleton />
-          ) : allKpis.length ? (
-            <>
-              <div
-                data-stagger
-                className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3"
-              >
-                {allKpis.map((k) => (
-                  <KpiCard key={k.id} k={k} />
-                ))}
-              </div>
-              {hasMoreKpis && (
-                <SeeMoreButton
-                  onClick={() => fetchMoreKpis()}
-                  isFetching={fetchingMoreKpis}
-                />
-              )}
-            </>
-          ) : (
-            <EmptyState title="No KPIs found" sub="Try a different search." />
-          )
-        ) : productsLoading ? (
-          <ListSkeleton />
-        ) : filteredProducts.length > 0 ? (
-          <>
-            <div data-stagger className="space-y-3">
-              {filteredProducts?.map((p) => (
-                <ProductRow key={p.id} p={p} />
-              ))}
-            </div>
-            {hasMoreProducts && (
-              <SeeMoreButton
-                onClick={() => fetchMoreProducts()}
-                isFetching={fetchingMoreProducts}
-              />
+              <EmptyState title="No results found" sub="Try a different search term." />
             )}
           </>
         ) : (
-          <EmptyState
-            title="No results found"
-            sub="Try adjusting your filters."
-          />
+          /* ── Browse mode ─────────────────────────────────────────────── */
+          type === "all" ? (
+            <>
+              {/* Products section */}
+              {productsLoading ? (
+                <ListSkeleton />
+              ) : filteredProducts.length > 0 ? (
+                <section className="mb-8">
+                  <div className="mb-3 flex items-center gap-2 border-b border-slate-100 pb-2">
+                    <h2 className="text-xs font-bold uppercase tracking-wider text-slate-400">Products &amp; Dashboards</h2>
+                    <span className="text-xs text-slate-300">·</span>
+                    <span className="text-xs text-slate-400">{filteredProducts.length}</span>
+                  </div>
+                  <div data-stagger className="space-y-3">
+                    {filteredProducts.map((p) => <ProductRow key={p.id} p={p} />)}
+                  </div>
+                  {hasMoreProducts && (
+                    <SeeMoreButton onClick={() => fetchMoreProducts()} isFetching={fetchingMoreProducts} />
+                  )}
+                </section>
+              ) : null}
+
+              {/* KPIs section — hidden when product filters are active */}
+              {!activeFilters && (
+                kpisLoading ? <GridSkeleton /> :
+                allKpis.length > 0 ? (
+                  <section>
+                    <div className="mb-3 flex items-center gap-2 border-b border-slate-100 pb-2">
+                      <h2 className="text-xs font-bold uppercase tracking-wider text-slate-400">KPIs</h2>
+                      <span className="text-xs text-slate-300">·</span>
+                      <span className="text-xs text-slate-400">{allKpis.length}</span>
+                    </div>
+                    <div data-stagger className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+                      {allKpis.map((k) => <KpiCard key={k.id} k={k} />)}
+                    </div>
+                    {hasMoreKpis && (
+                      <SeeMoreButton onClick={() => fetchMoreKpis()} isFetching={fetchingMoreKpis} />
+                    )}
+                  </section>
+                ) : null
+              )}
+
+              {!productsLoading && filteredProducts.length === 0 &&
+                (!activeFilters ? !kpisLoading && allKpis.length === 0 : true) && (
+                <EmptyState title="No results found" sub="Try adjusting your filters." />
+              )}
+            </>
+          ) : showKpis ? (
+            kpisLoading ? <GridSkeleton /> :
+            allKpis.length ? (
+              <>
+                <div data-stagger className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+                  {allKpis.map((k) => <KpiCard key={k.id} k={k} />)}
+                </div>
+                {hasMoreKpis && (
+                  <SeeMoreButton onClick={() => fetchMoreKpis()} isFetching={fetchingMoreKpis} />
+                )}
+              </>
+            ) : (
+              <EmptyState title="No KPIs found" sub="Try a different search." />
+            )
+          ) : productsLoading ? <ListSkeleton /> :
+            filteredProducts.length ? (
+              <>
+                <div data-stagger className="space-y-3">
+                  {filteredProducts.map((p) => <ProductRow key={p.id} p={p} />)}
+                </div>
+                {hasMoreProducts && (
+                  <SeeMoreButton onClick={() => fetchMoreProducts()} isFetching={fetchingMoreProducts} />
+                )}
+              </>
+            ) : (
+              <EmptyState title="No results found" sub="Try adjusting your filters." />
+            )
         )}
       </div>
     </div>
@@ -458,20 +355,8 @@ export function MarketplaceClient() {
 }
 
 function ListSkeleton() {
-  return (
-    <div className="space-y-3">
-      {Array.from({ length: 5 }).map((_, i) => (
-        <Skeleton key={i} className="h-[88px]" />
-      ))}
-    </div>
-  );
+  return <div className="space-y-3">{Array.from({ length: 5 }).map((_, i) => <Skeleton key={i} className="h-[88px]" />)}</div>;
 }
 function GridSkeleton() {
-  return (
-    <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-      {Array.from({ length: 6 }).map((_, i) => (
-        <Skeleton key={i} className="h-[180px]" />
-      ))}
-    </div>
-  );
+  return <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">{Array.from({ length: 6 }).map((_, i) => <Skeleton key={i} className="h-[180px]" />)}</div>;
 }

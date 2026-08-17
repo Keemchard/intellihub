@@ -140,12 +140,11 @@ export function resolveAccessState(
       return "granted";
     case "In Review":
     case "More Information Required":
+    case "Pending":
       return "pending";
     case "Rejected":
     case "Expired":
       return "rejected";
-    default:
-      return "none";
   }
 }
 
