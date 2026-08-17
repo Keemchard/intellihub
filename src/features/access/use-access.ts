@@ -6,7 +6,7 @@ import type { AccessRequest, CreateAccessRequestInput } from "@/types";
 export function useMyRequests() {
   return useQuery({
     queryKey: ["access-requests"],
-    queryFn: async (): Promise<AccessRequest[]> => (await (await fetch("/api/access-requests")).json()).data,
+    queryFn: async (): Promise<AccessRequest[]> => (await (await fetch(`${process.env.NEXT_PUBLIC_BASE_PATH}/api/access-requests`)).json()).data,
   });
 }
 
@@ -15,7 +15,7 @@ export function useCreateAccessRequest(productId: string) {
   const router = useRouter();
   return useMutation({
     mutationFn: async (input: CreateAccessRequestInput): Promise<AccessRequest> => {
-      const res = await fetch("/api/access-requests", {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_BASE_PATH}/api/access-requests`, {
         method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(input),
       });
       const json = await res.json();

@@ -20,7 +20,7 @@ export function LoginClient() {
 
   async function signIn(role: RoleName) {
     setBusy(role);
-    const res = await fetch("/api/auth/login", {
+    const res = await fetch(`${process.env.NEXT_PUBLIC_BASE_PATH}/api/auth/login`, {
       method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ role }),
     });
     if (res.ok) { router.push(next); router.refresh(); } else setBusy(null);
