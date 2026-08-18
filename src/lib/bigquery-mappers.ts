@@ -5,7 +5,15 @@ import type {
 } from "@/lib/bigquery-client";
 import type { Product, Kpi } from "@/types";
 
-const PALETTE = ["#7C3AED", "#0EA5E9", "#10B981", "#F59E0B", "#EF4444", "#6366F1", "#EC4899"];
+const PALETTE = [
+  "#7C3AED",
+  "#0EA5E9",
+  "#10B981",
+  "#F59E0B",
+  "#EF4444",
+  "#6366F1",
+  "#EC4899",
+];
 
 export function pickColor(seed: string | null | undefined): string {
   if (!seed) return PALETTE[0];
@@ -16,7 +24,12 @@ export function pickColor(seed: string | null | undefined): string {
 
 function toInitials(name: string | null | undefined): string {
   if (!name) return "??";
-  return name.split(/\s+/).map((w) => w[0] ?? "").join("").slice(0, 2).toUpperCase();
+  return name
+    .split(/\s+/)
+    .map((w) => w[0] ?? "")
+    .join("")
+    .slice(0, 2)
+    .toUpperCase();
 }
 
 export function normalizeType(raw: string | null | undefined): Product["type"] {
@@ -34,11 +47,9 @@ export const TYPE_ICONS: Record<Product["type"], string> = {
   kpi: "trending-up",
 };
 
-function normalizeTrust(cert: string | null | undefined): "Trusted" | "In Review" {
-  return cert === "Certified" ? "Trusted" : "In Review";
-}
-
-function normalizeRefresh(freq: string | null | undefined): "Daily" | "Weekly" | "Monthly" {
+function normalizeRefresh(
+  freq: string | null | undefined,
+): "Daily" | "Weekly" | "Monthly" {
   const f = (freq ?? "").toLowerCase();
   if (f.includes("week")) return "Weekly";
   if (f.includes("month")) return "Monthly";
@@ -61,7 +72,9 @@ function buildOwnerUser(
   };
 }
 
-export function fromMarketplace(row: DSMarketplaceSvRow): Omit<Product, "accessState"> {
+export function fromMarketplace(
+  row: DSMarketplaceSvRow,
+): Omit<Product, "accessState"> {
   const type = normalizeType(row.product_type);
   const ownerUser = buildOwnerUser(row.owner_id, row.owner_name);
   return {
@@ -78,7 +91,7 @@ export function fromMarketplace(row: DSMarketplaceSvRow): Omit<Product, "accessS
     rating: 0,
     reviews: 0,
     certified: row.certification_status === "Certified",
-    trust: normalizeTrust(row.certification_status),
+    trust: row.certification_status ?? "",
     launchType: "external_url",
     launchUrl: row.product_url ?? "",
     icon: TYPE_ICONS[type],
@@ -93,7 +106,9 @@ export function fromMarketplace(row: DSMarketplaceSvRow): Omit<Product, "accessS
   };
 }
 
-export function fromDetail(row: DSDataProductDetailRow): Omit<Product, "accessState"> {
+export function fromDetail(
+  row: DSDataProductDetailRow,
+): Omit<Product, "accessState"> {
   const type = normalizeType(row.product_type);
   const ownerUser = buildOwnerUser(
     row.owner?.owner_id,
@@ -115,7 +130,7 @@ export function fromDetail(row: DSDataProductDetailRow): Omit<Product, "accessSt
     rating: 0,
     reviews: 0,
     certified: row.certification_status === "Certified",
-    trust: normalizeTrust(row.certification_status),
+    trust: row.certification_status ?? "",
     launchType: "external_url",
     launchUrl: row.product_url ?? "",
     icon: TYPE_ICONS[type],
@@ -138,22 +153,30 @@ export function fromKpiDetail(row: DSKpiDetailRow): Kpi {
     row.owner?.initials,
   );
   const thresholds: Array<[string, string, string]> = [];
-  if (row.threshold_good) thresholds.push(["Good", row.threshold_good, "#10B981"]);
-  if (row.threshold_warning) thresholds.push(["Warning", row.threshold_warning, "#F59E0B"]);
-  if (row.threshold_critical) thresholds.push(["Critical", row.threshold_critical, "#EF4444"]);
-  const sortedLineage = (row.lineage ?? []).sort((a, b) => (a.stage_order ?? 0) - (b.stage_order ?? 0));
-  const upstream = sortedLineage.map((l) => l.stage_label ?? "").filter((x) => x !== "");
+  if (row.threshold_good)
+    thresholds.push(["Good", row.threshold_good, "#10B981"]);
+  if (row.threshold_warning)
+    thresholds.push(["Warning", row.threshold_warning, "#F59E0B"]);
+  if (row.threshold_critical)
+    thresholds.push(["Critical", row.threshold_critical, "#EF4444"]);
+  const sortedLineage = (row.lineage ?? []).sort(
+    (a, b) => (a.stage_order ?? 0) - (b.stage_order ?? 0),
+  );
+  const upstream = sortedLineage
+    .map((l) => l.stage_label ?? "")
+    .filter((x) => x !== "");
   return {
     id: row.kpi_id ?? row.kpi_code ?? "",
     name: row.kpi_name ?? "",
-    short: row.kpi_code ?? (row.kpi_name ?? "").split(" ").slice(0, 2).join(" "),
+    short:
+      row.kpi_code ?? (row.kpi_name ?? "").split(" ").slice(0, 2).join(" "),
     family: row.domain?.domain_name ?? row.business_domain ?? "",
     domain: row.business_domain ?? row.domain?.domain_name ?? "",
     owner: row.owner?.owner_team ?? row.owner?.owner_name ?? "",
     ownerUser,
     rating: 0,
     reviews: 0,
-    trust: normalizeTrust(row.certification_status),
+    trust: row.certification_status ?? "",
     dq: 0,
     value: "",
     trend: "",
@@ -170,6 +193,8 @@ export function fromKpiDetail(row: DSKpiDetailRow): Kpi {
     frequency: normalizeRefresh(row.time_granularity ?? row.refresh_frequency),
     aggregation: row.entity_granularity ?? "",
     thresholds,
-    relatedProducts: (row.used_in_products ?? []).map((p) => p.slug ?? "").filter((x) => x !== ""),
+    relatedProducts: (row.used_in_products ?? [])
+      .map((p) => p.slug ?? "")
+      .filter((x) => x !== ""),
   };
 }

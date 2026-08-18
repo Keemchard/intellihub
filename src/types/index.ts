@@ -8,7 +8,7 @@ export const ProductType = z.enum([
 ]);
 export type ProductType = z.infer<typeof ProductType>;
 
-export const TrustStatus = z.enum(["Trusted", "In Review"]);
+export const TrustStatus = z.string();
 export const Segment = z.enum(["Consumer", "B2B", "VIP"]);
 export const LaunchType = z.enum(["eagle_eye", "looker", "external_url"]);
 
