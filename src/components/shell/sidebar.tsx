@@ -44,7 +44,7 @@ export function Sidebar() {
 
       <nav className="mt-2 space-y-1 px-3">
         {NAV.map((item) => {
-          const phase2 = item.id === "access";
+          const phase2 = false;
           const active =
             !phase2 &&
             (pathname === item.href ||

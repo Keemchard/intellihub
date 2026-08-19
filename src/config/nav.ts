@@ -6,5 +6,11 @@ export const NAV = [
     icon: "grid",
     href: "/marketplace",
   },
-  // { id: "access", label: "Access & Enablement", icon: "shield-check", href: "/access" },
+  // {
+  //   id: "access",
+  //   label: "Access & Enablement",
+  //   icon: "shield-check",
+  //   href: "/access",
+  //   phase2: true,
+  // },
 ] as const;
