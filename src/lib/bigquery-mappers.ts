@@ -3,7 +3,7 @@ import type {
   DSDataProductDetailRow,
   DSKpiDetailRow,
 } from "@/lib/bigquery-client";
-import type { Product, Kpi } from "@/types";
+import type { ProductType, AccessState } from "@/types";
 
 const PALETTE = [
   "#7C3AED",
@@ -22,136 +22,96 @@ export function pickColor(seed: string | null | undefined): string {
   return PALETTE[Math.abs(h) % PALETTE.length];
 }
 
-function toInitials(name: string | null | undefined): string {
-  if (!name) return "??";
-  return name
-    .split(/\s+/)
-    .map((w) => w[0] ?? "")
-    .join("")
-    .slice(0, 2)
-    .toUpperCase();
-}
 
-export function normalizeType(raw: string | null | undefined): Product["type"] {
+export function normalizeType(raw: string | null | undefined): ProductType {
   const t = (raw ?? "").toLowerCase().replace(/[\s_-]+/g, "");
-  if (t === "dataproduct" || t.includes("dataproduct")) return "dataproduct";
-  if (t === "report" || t.includes("report")) return "report";
-  if (t === "kpi") return "kpi";
+  if (t.includes("dataproduct")) return "dataproduct";
+  if (t.includes("report")) return "report";
+  if (t.includes("kpi")) return "kpi";
   return "dashboard";
 }
 
-export const TYPE_ICONS: Record<Product["type"], string> = {
+export function normalizeTypes(raw: string | null | undefined): ProductType[] {
+  return (raw ?? "")
+    .split("|")
+    .map((s) => normalizeType(s.trim()))
+    .filter((v, i, arr) => arr.indexOf(v) === i);
+}
+
+export const TYPE_ICONS: Record<ProductType, string> = {
   dashboard: "layout-grid",
   dataproduct: "database",
   report: "bar-chart-3",
   kpi: "trending-up",
 };
 
-function normalizeRefresh(
-  freq: string | null | undefined,
-): "Daily" | "Weekly" | "Monthly" {
-  const f = (freq ?? "").toLowerCase();
-  if (f.includes("week")) return "Weekly";
-  if (f.includes("month")) return "Monthly";
-  return "Daily";
+
+export function formatDate(iso: string | null | undefined): string {
+  if (!iso) return "";
+  const d = new Date(iso);
+  return d.toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  });
 }
 
-function buildOwnerUser(
-  id: string | null | undefined,
-  name: string | null | undefined,
-  role = "Data Owner",
-  initials?: string | null,
-): Product["ownerUser"] {
-  const safeName = name ?? "Unknown";
-  return {
-    id: id ?? safeName.toLowerCase().replace(/\s+/g, "-"),
-    name: safeName,
-    role,
-    initials: initials ?? toInitials(safeName),
-    color: pickColor(id ?? safeName),
-  };
-}
+// ── Enriched product types (raw API row + computed fields) ──────────────────
 
-export function fromMarketplace(
+type ProductEnrichment = {
+  accessState: AccessState;
+  accent: string;
+  productType: ProductType;   // primary type (for icon)
+  productTypes: ProductType[]; // all parsed types (for filtering + display)
+  icon: string;
+};
+
+export type MarketplaceProduct = DSMarketplaceSvRow & ProductEnrichment;
+export type DetailProduct = DSDataProductDetailRow & ProductEnrichment;
+
+export function enrichMarketplace(
   row: DSMarketplaceSvRow,
-): Omit<Product, "accessState"> {
-  const type = normalizeType(row.product_type);
-  const ownerUser = buildOwnerUser(row.owner_id, row.owner_name);
+  accessState: AccessState = "none",
+): MarketplaceProduct {
+  const productTypes = normalizeTypes(row.product_type);
+  const productType = productTypes[0] ?? "dashboard";
   return {
-    id: row.data_product_id ?? row.slug ?? "",
-    type,
-    name: row.name ?? "",
-    family: row.domain_name ?? row.product_type ?? "",
-    domain: row.domain_name ?? "",
-    territory: "National",
-    segment: "Consumer",
-    owner: row.owner_name ?? "",
-    ownerUser,
-    steward: ownerUser,
-    rating: 0,
-    reviews: 0,
-    certified: row.certification_status === "Certified",
-    trust: row.certification_status ?? "",
-    launchType: "external_url",
-    launchUrl: row.product_url ?? "",
-    icon: TYPE_ICONS[type],
+    ...row,
+    accessState,
     accent: pickColor(row.domain_name),
-    desc: row.description ?? "",
-    purpose: row.description ?? "",
-    kpis: [],
-    tags: row.tags ?? [],
-    updated: "",
-    refresh: "Daily",
-    features: [],
+    productType,
+    productTypes,
+    icon: TYPE_ICONS[productType],
   };
 }
 
-export function fromDetail(
+export function enrichDetail(
   row: DSDataProductDetailRow,
-): Omit<Product, "accessState"> {
-  const type = normalizeType(row.product_type);
-  const ownerUser = buildOwnerUser(
-    row.owner?.owner_id,
-    row.owner?.owner_name,
-    "Data Owner",
-    row.owner?.owner_initials,
-  );
+  accessState: AccessState = "none",
+): DetailProduct {
+  const productTypes = normalizeTypes(row.product_type);
+  const productType = productTypes[0] ?? "dashboard";
   return {
-    id: row.data_product_id ?? row.slug ?? "",
-    type,
-    name: row.name ?? "",
-    family: row.domain?.domain_name ?? row.product_type ?? "",
-    domain: row.domain?.domain_name ?? "",
-    territory: "National",
-    segment: "Consumer",
-    owner: row.owner?.owner_team ?? row.owner?.owner_name ?? "",
-    ownerUser,
-    steward: ownerUser,
-    rating: 0,
-    reviews: 0,
-    certified: row.certification_status === "Certified",
-    trust: row.certification_status ?? "",
-    launchType: "external_url",
-    launchUrl: row.product_url ?? "",
-    icon: TYPE_ICONS[type],
+    ...row,
+    accessState,
     accent: pickColor(row.domain?.domain_name),
-    desc: row.description ?? "",
-    purpose: row.description ?? "",
-    kpis: (row.kpis ?? []).map((k) => k.kpi_id ?? "").filter((x) => x !== ""),
-    tags: (row.tags ?? []).map((t) => t.tag_name ?? "").filter((x) => x !== ""),
-    updated: "",
-    refresh: "Daily",
-    features: [],
+    productType,
+    productTypes,
+    icon: TYPE_ICONS[productType],
   };
 }
 
-export function fromKpiDetail(row: DSKpiDetailRow): Kpi {
-  const ownerUser = buildOwnerUser(
-    row.owner?.owner_id,
-    row.owner?.owner_name,
-    row.owner?.owner_team ?? "Data Owner",
-    row.owner?.initials,
-  );
+// ── KPI enrichment ──────────────────────────────────────────────────────────
+
+type KpiEnrichment = {
+  accent: string;
+  upstream: string[];
+  thresholds: Array<[string, string, string]>;
+};
+
+export type DetailKpi = DSKpiDetailRow & KpiEnrichment;
+
+export function enrichKpiDetail(row: DSKpiDetailRow): DetailKpi {
   const thresholds: Array<[string, string, string]> = [];
   if (row.threshold_good)
     thresholds.push(["Good", row.threshold_good, "#10B981"]);
@@ -159,42 +119,14 @@ export function fromKpiDetail(row: DSKpiDetailRow): Kpi {
     thresholds.push(["Warning", row.threshold_warning, "#F59E0B"]);
   if (row.threshold_critical)
     thresholds.push(["Critical", row.threshold_critical, "#EF4444"]);
-  const sortedLineage = (row.lineage ?? []).sort(
-    (a, b) => (a.stage_order ?? 0) - (b.stage_order ?? 0),
-  );
-  const upstream = sortedLineage
+  const upstream = (row.lineage ?? [])
+    .sort((a, b) => (a.stage_order ?? 0) - (b.stage_order ?? 0))
     .map((l) => l.stage_label ?? "")
-    .filter((x) => x !== "");
+    .filter(Boolean);
   return {
-    id: row.kpi_id ?? row.kpi_code ?? "",
-    name: row.kpi_name ?? "",
-    short:
-      row.kpi_code ?? (row.kpi_name ?? "").split(" ").slice(0, 2).join(" "),
-    family: row.domain?.domain_name ?? row.business_domain ?? "",
-    domain: row.business_domain ?? row.domain?.domain_name ?? "",
-    owner: row.owner?.owner_team ?? row.owner?.owner_name ?? "",
-    ownerUser,
-    rating: 0,
-    reviews: 0,
-    trust: row.certification_status ?? "",
-    dq: 0,
-    value: "",
-    trend: "",
-    trendDir: "up",
+    ...row,
     accent: pickColor(row.business_domain ?? row.domain?.domain_name),
-    tags: [],
-    category: row.kpi_category ?? "",
     upstream,
-    desc: row.kpi_description ?? "",
-    definition: row.kpi_description ?? "",
-    formula: row.kpi_formula ?? "",
-    context: row.business_impact ?? row.interpretation_rules ?? "",
-    source: row.primary_data_product_ids ?? upstream[0] ?? "",
-    frequency: normalizeRefresh(row.time_granularity ?? row.refresh_frequency),
-    aggregation: row.entity_granularity ?? "",
     thresholds,
-    relatedProducts: (row.used_in_products ?? [])
-      .map((p) => p.slug ?? "")
-      .filter((x) => x !== ""),
   };
 }

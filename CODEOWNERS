@@ -1,0 +1,31 @@
+# CODEOWNERS for Intellihub-FE
+
+# Project: https://gitlab.com/globetelecom/platforms/ntg-nai/application/dara/intellihub-fe
+
+# Docs: https://docs.gitlab.com/user/project/codeowners/
+
+#
+
+# Place this file at the repo root, OR /docs/CODEOWNERS, OR /.gitlab/CODEOWNERS
+
+# (GitLab checks all three; root is used here).
+
+#
+
+# To enforce: Settings → Merge requests → Merge request approvals →
+
+# enable "Require approval from code owners" (and protect the default
+
+# branch so code owner approval is mandatory before merge).
+
+#
+
+# The whole project is currently owned by a single person. To add more
+
+# owners later, just list additional emails/usernames space-separated
+
+# on the same line, or split into [Section Name] blocks per path group —
+
+# see https://docs.gitlab.com/user/project/codeowners/reference/
+
+- keemchard.tamio@gsupport.com.ph

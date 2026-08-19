@@ -3,10 +3,16 @@ import Link from "next/link";
 import { useMemo } from "react";
 import { useDataProductDetail } from "@/features/bigquery/use-bigquery";
 import { useMyRequests } from "@/features/access/use-access";
-import { fromDetail, pickColor, TYPE_ICONS } from "@/lib/bigquery-mappers";
+import {
+  enrichDetail,
+  pickColor,
+  TYPE_ICONS,
+  formatDate,
+  type DetailProduct,
+} from "@/lib/bigquery-mappers";
 import { Card } from "@/components/ui/card";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Icon } from "@/components/shared/icon";
-import { Avatar } from "@/components/shared/brand";
 import { TypePill, TrustBadge, Stars } from "@/components/shared/badges";
 import { AccessCTA, AccessHint } from "@/components/shared/access-cta";
 import { DataHubButton } from "@/components/shared/datahub-button";
@@ -26,14 +32,66 @@ function deriveAccessState(
   return "pending";
 }
 
-function Meta({ label, value }: { label: string; value: string }) {
+function MetaItem({ label, value }: { label: string; value: string }) {
   return (
     <div>
       <dt className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
         {label}
       </dt>
-      <dd className="mt-0.5 text-sm font-semibold text-foreground">{value}</dd>
+      <dd className="mt-0.5 text-sm font-semibold text-foreground">{value || "—"}</dd>
     </div>
+  );
+}
+
+interface KpiItem {
+  id: string;
+  name: string;
+  category: string;
+  unit: string;
+  certificationStatus: string;
+  status: string;
+  accent: string;
+}
+
+function KpiRow({ kpi }: { kpi: KpiItem }) {
+  return (
+    <Link
+      href={`/kpi/${kpi.id}`}
+      className="ring-focus flex items-center gap-4 rounded-xl border border-border bg-card px-4 py-3 transition hover:border-primary hover:shadow-card"
+    >
+      <div
+        className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl"
+        style={{ background: `${kpi.accent}1a`, color: kpi.accent }}
+      >
+        <Icon name="badge-check" size={22} />
+      </div>
+      <div className="min-w-0 flex-1">
+        <div className="text-sm font-semibold text-foreground">{kpi.name}</div>
+        <div className="mt-0.5 flex flex-wrap gap-x-4 gap-y-0.5 text-xs text-muted-foreground">
+          {kpi.category && <span>{kpi.category}</span>}
+          {kpi.unit && <span>{kpi.unit}</span>}
+        </div>
+      </div>
+      <div className="flex shrink-0 items-center gap-2">
+        {kpi.certificationStatus && (
+          <span className="rounded-md bg-muted px-2 py-0.5 text-xs font-medium text-muted-foreground">
+            {kpi.certificationStatus}
+          </span>
+        )}
+        {kpi.status && (
+          <span
+            className={`rounded-md px-2 py-0.5 text-xs font-semibold ${
+              kpi.status === "Active"
+                ? "bg-emerald-500/10 text-emerald-600"
+                : "bg-muted text-muted-foreground"
+            }`}
+          >
+            {kpi.status}
+          </span>
+        )}
+        <Icon name="arrow-right" size={14} className="text-muted-foreground" />
+      </div>
+    </Link>
   );
 }
 
@@ -46,23 +104,26 @@ export function ProductDetailClient({ id }: { id: string }) {
 
   const row = data?.data[0];
 
-  const product = useMemo(() => {
+  const product = useMemo<DetailProduct | null>(() => {
     if (!row) return null;
-    const base = fromDetail(row);
-    return { ...base, accessState: deriveAccessState(requests, base.id) };
+    const accessState = deriveAccessState(requests, row.data_product_id ?? "");
+    return enrichDetail(row, accessState);
   }, [row, requests]);
 
-  // Related KPIs are embedded in the detail response
-  const relatedKpis = useMemo(
+  const relatedKpis = useMemo<KpiItem[]>(
     () =>
-      (row?.kpis ?? [])
+      (product?.kpis ?? [])
         .filter((k) => k.kpi_id)
         .map((k) => ({
           id: k.kpi_id!,
           name: k.kpi_name ?? "",
-          accent: pickColor(k.kpi_category),
+          category: k.kpi_category ?? "",
+          unit: k.kpi_unit ?? "",
+          certificationStatus: k.certification_status ?? "",
+          status: k.kpi_status ?? "",
+          accent: pickColor(k.kpi_id),
         })),
-    [row],
+    [product],
   );
 
   if (isLoading) {
@@ -95,6 +156,12 @@ export function ProductDetailClient({ id }: { id: string }) {
     );
   }
 
+  const ownerName = product.owner?.owner_name ?? "Unknown";
+  const ownerColor = pickColor(product.owner?.owner_id ?? ownerName);
+  const ownerInitials =
+    product.owner?.owner_initials ??
+    ownerName.split(/\s+/).map((w) => w[0] ?? "").join("").slice(0, 2).toUpperCase();
+
   return (
     <div className="mx-auto max-w-6xl px-6 py-8">
       <Link
@@ -114,104 +181,96 @@ export function ProductDetailClient({ id }: { id: string }) {
                 color: product.accent,
               }}
             >
-              <Icon name={TYPE_ICONS[product.type]} size={30} />
+              <Icon name={TYPE_ICONS[product.productType]} size={30} />
             </div>
             <div className="min-w-0">
               <div className="mb-2 flex flex-wrap items-center gap-2">
-                <TypePill type={product.type} />
-                <TrustBadge trust={product.trust} />
+                {product.productTypes.map((t) => <TypePill key={t} type={t} />)}
+                <TrustBadge trust={product.certification_status ?? ""} />
               </div>
               <h1 className="text-2xl font-extrabold tracking-tight">
                 {product.name}
               </h1>
               <div className="mt-2 flex items-center gap-3">
                 <span className="text-sm text-muted-foreground">
-                  {product.family}
+                  {product.domain?.domain_name ?? product.product_type}
                 </span>
-                <Stars rating={product.rating} reviews={product.reviews} />
+                <Stars rating={0} reviews={0} />
               </div>
             </div>
           </div>
 
+          {/* Description card */}
           <Card className="mb-5 p-6">
             <h2 className="mb-2 text-sm font-bold uppercase tracking-wide text-muted-foreground">
-              Purpose
+              Description
             </h2>
             <p className="text-[15px] leading-relaxed text-foreground">
-              {product.purpose}
+              {product.description}
             </p>
-            {product.desc !== product.purpose && (
-              <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
-                {product.desc}
-              </p>
-            )}
           </Card>
 
-          {product.features.length > 0 && (
-            <Card className="mb-5 p-6">
-              <h2 className="mb-3 text-sm font-bold uppercase tracking-wide text-muted-foreground">
-                What you can do
-              </h2>
-              <ul className="grid gap-2.5 sm:grid-cols-2">
-                {product.features.map((f) => (
-                  <li key={f} className="flex items-start gap-2.5 text-sm">
-                    <Icon
-                      name="check-circle"
-                      size={17}
-                      className="mt-0.5 shrink-0 text-emerald-500"
-                    />
-                    <span>{f}</span>
-                  </li>
-                ))}
-              </ul>
-            </Card>
-          )}
-
-          {product.tags.length > 0 && (
+          {/* Tags */}
+          {(product.tags ?? []).length > 0 && (
             <Card className="mb-5 p-6">
               <h2 className="mb-3 text-sm font-bold uppercase tracking-wide text-muted-foreground">
                 Tags
               </h2>
               <div className="flex flex-wrap gap-2">
-                {product.tags.map((t) => (
+                {product.tags!.map((t) => (
                   <span
-                    key={t}
+                    key={t.tag_id ?? t.tag_name}
                     className="rounded-lg bg-muted px-2.5 py-1 text-xs font-medium text-muted-foreground"
                   >
-                    {t}
+                    {t.tag_name}
                   </span>
                 ))}
               </div>
             </Card>
           )}
 
-          {relatedKpis.length > 0 && (
-            <Card className="p-6">
-              <h2 className="mb-3 text-sm font-bold uppercase tracking-wide text-muted-foreground">
-                Related KPIs
-              </h2>
-              <div className="flex flex-wrap gap-2">
-                {relatedKpis.map((k) => (
-                  <Link
-                    key={k.id}
-                    href={`/kpi/${k.id}`}
-                    className="ring-focus inline-flex items-center gap-2 rounded-xl border border-border bg-card px-3 py-2 text-sm font-semibold transition hover:border-primary hover:shadow-card"
-                  >
-                    <span
-                      className="h-2 w-2 rounded-full"
-                      style={{ background: k.accent }}
-                    />
-                    {k.name}
-                    <Icon
-                      name="arrow-right"
-                      size={14}
-                      className="text-muted-foreground"
-                    />
-                  </Link>
-                ))}
-              </div>
-            </Card>
-          )}
+          {/* Overview + KPIs tabs */}
+          <Card className="p-6">
+            <Tabs defaultValue="overview">
+              <TabsList className="mb-5 w-full justify-start">
+                <TabsTrigger value="overview">Overview</TabsTrigger>
+                <TabsTrigger value="kpis">
+                  KPIs
+                  {relatedKpis.length > 0 && (
+                    <span className="ml-1.5 rounded-full bg-muted px-1.5 py-0.5 text-xs font-semibold text-muted-foreground">
+                      {relatedKpis.length}
+                    </span>
+                  )}
+                </TabsTrigger>
+              </TabsList>
+
+              <TabsContent value="overview">
+                {product.business_purpose ? (
+                  <p className="text-[15px] leading-relaxed text-foreground">
+                    {product.business_purpose}
+                  </p>
+                ) : (
+                  <p className="text-sm text-muted-foreground">
+                    No business purpose defined.
+                  </p>
+                )}
+              </TabsContent>
+
+              <TabsContent value="kpis">
+                {relatedKpis.length === 0 ? (
+                  <p className="text-sm text-muted-foreground">
+                    No KPIs linked to this product.
+                  </p>
+                ) : (
+                  <div className="space-y-2">
+                    {relatedKpis.map((k) => (
+                      <KpiRow key={k.id} kpi={k} />
+                    ))}
+                  </div>
+                )}
+              </TabsContent>
+            </Tabs>
+          </Card>
         </div>
 
         <aside className="space-y-4">
@@ -237,44 +296,31 @@ export function ProductDetailClient({ id }: { id: string }) {
             <h3 className="mb-4 text-sm font-bold">Details</h3>
             <dl className="space-y-4">
               <div className="flex items-center gap-3">
-                <Avatar
-                  name={product.ownerUser.name}
-                  color={product.ownerUser.color}
-                  size={34}
-                />
-                <div>
-                  <div className="text-sm font-semibold">
-                    {product.ownerUser.name}
-                  </div>
-                  <div className="text-xs text-muted-foreground">
-                    Product Owner
-                  </div>
+                <div
+                  className="grid h-9 w-9 shrink-0 place-items-center rounded-full text-sm font-bold text-white"
+                  style={{ background: ownerColor }}
+                >
+                  {ownerInitials}
                 </div>
-              </div>
-              <div className="flex items-center gap-3">
-                <Avatar
-                  name={product.steward.name}
-                  color={product.steward.color}
-                  size={34}
-                />
                 <div>
-                  <div className="text-sm font-semibold">
-                    {product.steward.name}
-                  </div>
+                  <div className="text-sm font-semibold">{ownerName}</div>
                   <div className="text-xs text-muted-foreground">
-                    Data Steward
+                    {product.owner?.owner_team ?? "Data Owner"}
                   </div>
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-4 border-t border-border pt-4">
-                <Meta label="Domain" value={product.domain} />
-                <Meta label="Segment" value={product.segment} />
-                <Meta label="Territory" value={product.territory} />
-                <Meta label="Refresh" value={product.refresh} />
-                {product.updated && (
-                  <Meta label="Updated" value={product.updated} />
+                <MetaItem label="Domain" value={product.domain?.domain_name ?? ""} />
+                <MetaItem label="Segment" value={product.segments ?? ""} />
+                <MetaItem label="Territory" value="National" />
+                <MetaItem label="Refresh" value={product.refresh_frequency ?? ""} />
+                {product.last_updated_at?.value && (
+                  <MetaItem label="Updated" value={formatDate(product.last_updated_at.value)} />
                 )}
-                <Meta label="Owner team" value={product.owner} />
+                <MetaItem
+                  label="Owner team"
+                  value={product.owner?.owner_team ?? product.owner?.owner_name ?? ""}
+                />
               </div>
             </dl>
           </Card>

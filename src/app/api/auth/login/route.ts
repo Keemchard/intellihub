@@ -13,11 +13,12 @@ export async function POST(req: NextRequest) {
   if (!parsed.success) return NextResponse.json({ error: "Invalid role" }, { status: 400 });
 
   const user = buildSessionUser(parsed.data);
+  const isHttps = new URL(req.url).protocol === "https:";
   const res = NextResponse.json({ data: user });
   res.cookies.set(SESSION_COOKIE, encodeSession(user), {
     httpOnly: true,
     sameSite: "lax",
-    secure: process.env.NODE_ENV === "production",
+    secure: isHttps,
     path: "/",
     maxAge: 60 * 60 * 8,
   });

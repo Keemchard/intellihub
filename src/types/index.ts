@@ -8,84 +8,13 @@ export const ProductType = z.enum([
 ]);
 export type ProductType = z.infer<typeof ProductType>;
 
-export const TrustStatus = z.string();
-export const Segment = z.enum(["Consumer", "B2B", "VIP"]);
-export const LaunchType = z.enum(["eagle_eye", "looker", "external_url"]);
-
 /** Resolved server-side; drives the single entitlement-gated CTA. */
 export const AccessState = z.enum(["granted", "pending", "none", "rejected"]);
 export type AccessState = z.infer<typeof AccessState>;
 
-export const OwnerUser = z.object({
-  id: z.string(),
-  name: z.string(),
-  role: z.string(),
-  initials: z.string(),
-  color: z.string(),
-});
+// Product + KPI types live in @/lib/bigquery-mappers as MarketplaceProduct, DetailProduct, DetailKpi
+// (raw API fields + minimal computed fields: accent, icon, productType, accessState, upstream, thresholds)
 
-export const Product = z.object({
-  id: z.string(),
-  type: ProductType,
-  name: z.string(),
-  family: z.string(),
-  domain: z.string(),
-  territory: z.string(),
-  segment: Segment,
-  owner: z.string(),
-  ownerUser: OwnerUser,
-  steward: OwnerUser,
-  rating: z.number(),
-  reviews: z.number(),
-  certified: z.boolean(),
-  trust: TrustStatus,
-  accessState: AccessState, // DERIVED server-side from the access-request event log
-  launchType: LaunchType,
-  launchUrl: z.string(),
-  icon: z.string(),
-  accent: z.string(),
-  desc: z.string(),
-  purpose: z.string(),
-  kpis: z.array(z.string()),
-  tags: z.array(z.string()),
-  updated: z.string(),
-  refresh: z.enum(["Daily", "Weekly", "Monthly"]),
-  features: z.array(z.string()),
-});
-export type Product = z.infer<typeof Product>;
-
-export const Threshold = z.tuple([z.string(), z.string(), z.string()]);
-
-export const Kpi = z.object({
-  id: z.string(),
-  name: z.string(),
-  short: z.string(),
-  family: z.string(),
-  domain: z.string(),
-  owner: z.string(),
-  ownerUser: OwnerUser,
-  rating: z.number(),
-  reviews: z.number(),
-  trust: TrustStatus,
-  dq: z.number(),
-  value: z.string(),
-  trend: z.string(),
-  trendDir: z.enum(["up", "down"]),
-  accent: z.string(),
-  tags: z.array(z.string()),
-  category: z.string(),
-  upstream: z.array(z.string()), // surfaced as "Data Sources & Provenance"
-  desc: z.string(),
-  definition: z.string(), // inline glossary
-  formula: z.string(),
-  context: z.string(),
-  source: z.string(),
-  frequency: z.string(),
-  aggregation: z.string(),
-  thresholds: z.array(Threshold),
-  relatedProducts: z.array(z.string()),
-});
-export type Kpi = z.infer<typeof Kpi>;
 
 /** Phase 1 access tiers (CYOD / Self-Serve are Eagle-Eye-only, enforced server-side). */
 export const RoleTier = z.enum(["Viewer", "CYOD", "Self-Serve"]);

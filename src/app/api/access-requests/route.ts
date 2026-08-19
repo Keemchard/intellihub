@@ -25,21 +25,22 @@ export async function POST(req: NextRequest) {
   const product = await getProductRaw(parsed.data.productId);
   if (!product) return notFound();
 
+  const family = product.domain?.domain_name ?? product.product_type ?? "";
   // Server-side enforcement: CYOD / Self-Serve exist only for Eagle Eye products.
-  if (!allowedTiers(product.family).includes(parsed.data.roleTier)) {
-    return badRequest({ roleTier: [`${parsed.data.roleTier} is not available for ${product.family}`] });
+  if (!allowedTiers(family).includes(parsed.data.roleTier)) {
+    return badRequest({ roleTier: [`${parsed.data.roleTier} is not available for ${family}`] });
   }
   // Idempotency: never stack duplicate open requests.
-  const existing = findOpenRequest(session.id, product.id);
+  const existing = findOpenRequest(session.id, product.data_product_id ?? "");
   if (existing) return ok(existing, { deduped: true });
 
   const request = createRequest({
     userId: session.id,
     actor: session.name,
-    productId: product.id,
-    productName: product.name,
-    productType: product.type,
-    family: product.family,
+    productId: product.data_product_id ?? "",
+    productName: product.name ?? "",
+    productType: product.productType,
+    family,
     roleTier: parsed.data.roleTier,
     justification: parsed.data.justification,
   });

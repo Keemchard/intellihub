@@ -17,8 +17,8 @@ export function BotWidget() {
 
   if (!botOpen) {
     return (
-      <button onClick={openBot} aria-label="Open IntelliBot"
-        className="grad-brand fixed bottom-6 right-6 z-40 grid h-14 w-14 place-items-center rounded-2xl text-white shadow-float transition hover:brightness-110">
+      <button disabled aria-label="IntelliBot — Coming in Phase 2" title="Coming in Phase 2"
+        className="fixed bottom-6 right-6 z-40 grid h-14 w-14 cursor-not-allowed place-items-center rounded-2xl bg-muted text-muted-foreground/40 shadow-float">
         <Icon name="sparkles" size={24} />
       </button>
     );

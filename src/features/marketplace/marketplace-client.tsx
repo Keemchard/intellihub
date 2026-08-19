@@ -8,11 +8,7 @@ import {
   useKpiDetailInfinite,
   useSearchIndex,
 } from "@/features/bigquery/use-bigquery";
-import {
-  fromMarketplace,
-  fromKpiDetail,
-  pickColor,
-} from "@/lib/bigquery-mappers";
+import { enrichMarketplace, enrichKpiDetail } from "@/lib/bigquery-mappers";
 import { FilterGroup } from "./filter-group";
 import { ProductRow } from "@/components/shared/product-card";
 import { KpiCard } from "@/components/shared/kpi-card";
@@ -136,26 +132,24 @@ export function MarketplaceClient() {
     [prodPages],
   );
   const filteredProducts = useMemo(() => {
-    let out = allProductRows.map((r) => ({
-      ...fromMarketplace(r),
-      accessState: "none" as const,
-    }));
-    // if (type !== "all" && type !== "kpi")
-    //   out = out.filter((p) => p.type === type);
-    if (domains.length) out = out.filter((p) => domains.includes(p.domain));
-    if (segments.length) out = out.filter((p) => segments.includes(p.segment));
+    let out = allProductRows.map((r) => enrichMarketplace(r, "none"));
+    if (domains.length)
+      out = out.filter((p) => domains.includes(p.domain_name ?? ""));
+    if (segments.length)
+      out = out.filter((p) => segments.some((s) => (p.segments ?? "").includes(s)));
     if (certs.length)
       out = out.filter((p) =>
         certs.some((c) =>
           c === "Certified"
-            ? p.certified
-            : c === "validated"
-              ? p.trust === "Trusted"
-              : p.trust === "In Review",
+            ? p.certification_status === "Certified"
+            : c === "Validated"
+              ? p.certification_status === "Validated"
+              : p.certification_status !== "Certified" &&
+                p.certification_status !== "Validated",
         ),
       );
     return out;
-  }, [allProductRows, type, domains, segments, certs]);
+  }, [allProductRows, domains, segments, certs]);
 
   const kpiKey = {};
   const {
@@ -167,7 +161,7 @@ export function MarketplaceClient() {
   } = useKpiDetailInfinite(kpiKey, { enabled: !isSearching });
 
   const allKpis = useMemo(
-    () => (kpiPages?.pages.flatMap((p) => p.data) ?? []).map(fromKpiDetail),
+    () => (kpiPages?.pages.flatMap((p) => p.data) ?? []).map(enrichKpiDetail),
     [kpiPages],
   );
 
@@ -352,7 +346,7 @@ export function MarketplaceClient() {
                 </div>
                 <div data-stagger className="space-y-3">
                   {filteredProducts.map((p) => (
-                    <ProductRow key={p.id} p={p} />
+                    <ProductRow key={p.data_product_id} p={p} />
                   ))}
                 </div>
                 {hasMoreProducts && (
@@ -384,7 +378,7 @@ export function MarketplaceClient() {
                     className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3"
                   >
                     {allKpis.map((k) => (
-                      <KpiCard key={k.id} k={k} />
+                      <KpiCard key={k.kpi_id} k={k} />
                     ))}
                   </div>
                   {hasMoreKpis && (
@@ -417,7 +411,7 @@ export function MarketplaceClient() {
                 className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3"
               >
                 {allKpis.map((k) => (
-                  <KpiCard key={k.id} k={k} />
+                  <KpiCard key={k.kpi_id} k={k} />
                 ))}
               </div>
               {hasMoreKpis && (
@@ -436,7 +430,7 @@ export function MarketplaceClient() {
           <>
             <div data-stagger className="space-y-3">
               {filteredProducts?.map((p) => (
-                <ProductRow key={p.id} p={p} />
+                <ProductRow key={p.data_product_id} p={p} />
               ))}
             </div>
             {hasMoreProducts && (

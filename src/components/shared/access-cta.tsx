@@ -4,18 +4,20 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Icon } from "@/components/shared/icon";
 import { RequestAccessModal } from "@/components/shared/request-access-modal";
-import type { Product } from "@/types";
+import type { DetailProduct } from "@/lib/bigquery-mappers";
 
-/** Single entitlement-gated control. State resolved server-side via product.accessState. */
-export function AccessCTA({ product, size = "default" }: { product: Product; size?: "default" | "lg" }) {
+export function AccessCTA({
+  product,
+  size = "default",
+}: {
+  product: DetailProduct;
+  size?: "default" | "lg";
+}) {
   const [open, setOpen] = useState(false);
 
   if (product.accessState === "granted") {
-    // Synchronous open from a direct click → popup-blocker safe. Fire-and-forget (new tab).
     const launch = () => {
-      const url = `${product.launchUrl}${product.id}`;
-      window.open(url, "_blank", "noopener,noreferrer");
-      // Tranche 2: POST /api/events/deep-link
+      window.open(product.product_url ?? "", "_blank", "noopener,noreferrer");
     };
     return (
       <Button size={size} onClick={launch}>
@@ -33,16 +35,20 @@ export function AccessCTA({ product, size = "default" }: { product: Product; siz
   }
 
   return (
-    <>
-      <Button size={size} onClick={() => setOpen(true)}>
-        <Icon name="shield-check" size={16} /> Request Access
-      </Button>
-      <RequestAccessModal product={product} open={open} onOpenChange={setOpen} />
-    </>
+    <Button size={size} disabled className="cursor-not-allowed !opacity-40" title="Coming in Phase 2">
+      <Icon name="shield-check" size={16} /> Request Access
+    </Button>
   );
 }
 
-export function AccessHint({ product }: { product: Product }) {
+export function AccessHint({ product }: { product: DetailProduct }) {
   if (product.accessState !== "pending") return null;
-  return <Link href="/access" className="text-xs font-semibold text-primary hover:underline">View request status →</Link>;
+  return (
+    <Link
+      href="/access"
+      className="text-xs font-semibold text-primary hover:underline"
+    >
+      View request status →
+    </Link>
+  );
 }

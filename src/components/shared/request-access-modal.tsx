@@ -7,16 +7,19 @@ import { Button } from "@/components/ui/button";
 import { Icon } from "@/components/shared/icon";
 import { useCreateAccessRequest } from "@/features/access/use-access";
 import { allowedTiers } from "@/lib/auth/roles";
-import { CreateAccessRequestInput, type Product } from "@/types";
+import { CreateAccessRequestInput } from "@/types";
 import { cn } from "@/lib/utils";
+import type { DetailProduct } from "@/lib/bigquery-mappers";
 
-export function RequestAccessModal({ product, open, onOpenChange }: { product: Product; open: boolean; onOpenChange: (v: boolean) => void }) {
-  const tiers = allowedTiers(product.family);
-  const mutation = useCreateAccessRequest(product.id);
+export function RequestAccessModal({ product, open, onOpenChange }: { product: DetailProduct; open: boolean; onOpenChange: (v: boolean) => void }) {
+  const family = product.domain?.domain_name ?? product.product_type ?? "";
+  const tiers = allowedTiers(family);
+  const productId = product.data_product_id ?? "";
+  const mutation = useCreateAccessRequest(productId);
 
   const form = useForm<CreateAccessRequestInput>({
     resolver: zodResolver(CreateAccessRequestInput),
-    defaultValues: { productId: product.id, roleTier: "Viewer", justification: "" },
+    defaultValues: { productId, roleTier: "Viewer", justification: "" },
     mode: "onBlur",
   });
   const { register, handleSubmit, watch, setValue, reset, formState: { errors, isSubmitting } } = form;

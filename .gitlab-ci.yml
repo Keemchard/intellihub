@@ -1,0 +1,43 @@
+variables:
+  DEPLOY_BRANCH:
+    value: "main"
+    description: "Branch to deploy (e.g. main, fix/uat, feature/xyz)"
+
+stages:
+  - deploy
+
+deploy_production:
+  stage: deploy
+  tags:
+    - prod-203
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "web"'
+      when: on_success
+    - if: '$CI_COMMIT_BRANCH == "main"'
+      when: on_success
+  script:
+    # 1. Navigate to the local project deployment folder
+    - cd C:\UniServerZ\www\intellihub-fe
+
+    # 2. Configure safe directory and git remote
+    - git config --global --add safe.directory C:/UniServerZ/www/intellihub-fe
+    - if (!(Test-Path .git)) { git init }
+    - git remote | Select-String -Pattern "origin" | ForEach-Object { git remote remove origin }
+    - git remote add origin https://gitlab.com/globetelecom/platforms/ntg-nai/application/dara/intellihub-fe.git
+
+    # 3. Fetch and reset to the selected branch
+    - git fetch origin $env:DEPLOY_BRANCH
+    - git checkout -f -B $env:DEPLOY_BRANCH origin/$env:DEPLOY_BRANCH
+    - git reset --hard origin/$env:DEPLOY_BRANCH
+    - git clean -fd -e .pm2 -e .env.local -e node_modules -e .next
+
+    # 4. Write CI/CD variables to .env.local (sourced from GitLab Settings → CI/CD → Variables)
+    - echo "INTELLIHUB_API_URL=$env:INTELLIHUB_API_URL" | Out-File -FilePath .env.local -Encoding utf8
+    - echo "INTELLIHUB_API_KEY=$env:INTELLIHUB_API_KEY" | Out-File -FilePath .env.local -Encoding utf8 -Append
+
+    # 5. Install dependencies and compile Next.js production build
+    - npm install
+    - npm run build
+
+    # 6. Reload the app in PM2 without downtime
+    - npx pm2 restart intellihub

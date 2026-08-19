@@ -33,14 +33,14 @@ export function routeQuery(query: string): BotResponse {
   const meaningful = tokens.filter((t) => t.length > 2 && !STOP.has(t));
 
   const rankedProducts = products
-    .map((p) => ({ p, s: score(`${p.name} ${p.desc} ${p.domain} ${p.family} ${p.tags.join(" ")} ${p.type}`, tokens) }))
+    .map((p) => ({ p, s: score(`${p.name} ${p.description} ${p.domain_name} ${p.tags.join(" ")} ${p.productType}`, tokens) }))
     .filter((x) => x.s > 0).sort((a, b) => b.s - a.s).slice(0, 3)
-    .map(({ p }) => ({ id: p.id, name: p.name, type: p.type, icon: p.icon, accent: p.accent, desc: p.desc }));
+    .map(({ p }) => ({ id: p.data_product_id, name: p.name, type: p.productType, icon: p.icon, accent: p.accent, desc: p.description }));
 
   const rankedKpis = kpis
-    .map((k) => ({ k, s: score(`${k.name} ${k.desc} ${k.domain} ${k.tags.join(" ")} ${k.category}`, tokens) }))
+    .map((k) => ({ k, s: score(`${k.kpi_name} ${k.kpi_description} ${k.business_domain} ${k.kpi_category}`, tokens) }))
     .filter((x) => x.s > 0).sort((a, b) => b.s - a.s).slice(0, 3)
-    .map(({ k }) => ({ id: k.id, name: k.name, value: k.value, accent: k.accent }));
+    .map(({ k }) => ({ id: k.kpi_id, name: k.kpi_name ?? "", value: "", accent: k.accent }));
 
   const howto = HOWTO.find((h) => h.match.test(query))?.text;
 

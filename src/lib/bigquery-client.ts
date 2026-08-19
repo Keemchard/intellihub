@@ -24,6 +24,7 @@ export interface DSMarketplaceSvRow {
   slug: string | null;
   description: string | null;
   product_type: string | null;
+  segments: string | null;
   certification_status: string | null;
   status: string | null;
   product_url: string | null;
@@ -41,11 +42,19 @@ export interface DSDataProductDetailRow {
   name: string | null;
   slug: string | null;
   description: string | null;
+  business_purpose: string | null;
   product_type: string | null;
+  domain_id: string | null;
+  segments: string | null;
   certification_status: string | null;
+  owner_id: string | null;
+  kpi_count: number | null;
+  refresh_frequency: string | null;
   status: string | null;
   product_url: string | null;
   documentation_url: string | null;
+  created_at: { value: string } | null;
+  last_updated_at: { value: string } | null;
   domain: { domain_id: string | null; domain_name: string | null } | null;
   owner: {
     owner_id: string | null;
@@ -53,11 +62,14 @@ export interface DSDataProductDetailRow {
     owner_email: string | null;
     owner_team: string | null;
     owner_initials: string | null;
+    is_active: boolean | null;
   } | null;
   tags: Array<{
     tag_id: string | null;
     tag_name: string | null;
+    slug: string | null;
     tag_group: string | null;
+    is_active: boolean | null;
   }> | null;
   kpis: Array<{
     kpi_id: string | null;

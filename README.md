@@ -190,6 +190,20 @@ All domain types live in `src/types/index.ts`, defined with Zod (validated, not 
 | `/bigquery/*`                   | GET      | Thin, auth-gated passthroughs onto each BigQuery source view |
 | `/integrations/appsheet/status` | POST     | Inbound webhook from AppSheet (signature-checked)            |
 
+### Code owners
+
+This repo uses a [`CODEOWNERS`](./CODEOWNERS) file (GitLab convention — root, `/docs/`, or `/.gitlab/`) so merge requests show required reviewers automatically. Every path in the repo is currently owned by a person(s) inside `CODEOWNERS` file:
+
+current:
+
+```
+* keemchard.tamio@gsupport.com.ph
+```
+
+Enable it via **Settings → Repository → Protected branches** — find your target branch (e.g. `main`) and toggle **"Code owner approval"** on for it. (This lives under Protected branches, not the Merge request approvals page.)
+
+If ownership later needs to expand to a team or split by area (e.g. frontend / data / security), `CODEOWNERS` can list multiple owners per line or be broken into `[Section Name]` blocks per path group, optionally with a required approval count (e.g. `[Auth & Access][2]`) — see the [GitLab CODEOWNERS reference](https://docs.gitlab.com/user/project/codeowners/reference/).
+
 ---
 
 ## 3. Notable design principles worth preserving

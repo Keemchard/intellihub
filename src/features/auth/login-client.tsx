@@ -20,7 +20,7 @@ export function LoginClient() {
 
   async function signIn(role: RoleName) {
     setBusy(role);
-    const res = await fetch("/api/auth/login", {
+    const res = await fetch(`${process.env.NEXT_PUBLIC_BASE_PATH}/api/auth/login`, {
       method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ role }),
     });
     if (res.ok) { router.push(next); router.refresh(); } else setBusy(null);
@@ -44,12 +44,12 @@ export function LoginClient() {
         <div className="mb-3 text-center text-xs font-semibold uppercase tracking-widest text-muted-foreground">or explore as</div>
         <div className="grid grid-cols-2 gap-3">
           {roles.map((r) => (
-            <button key={r.id} onClick={() => signIn(r.id)} disabled={!!busy}
-              className="ring-focus rounded-2xl border border-border bg-card p-4 text-left transition hover:border-primary hover:shadow-card disabled:opacity-60">
+            <div key={r.id} title="Coming in Phase 2"
+              className="relative cursor-not-allowed rounded-2xl border border-border bg-card p-4 text-left opacity-40 select-none">
               <div className="mb-2 grid h-9 w-9 place-items-center rounded-xl bg-accent text-accent-foreground"><Icon name={r.icon} size={17} /></div>
               <div className="text-sm font-bold">{r.label}</div>
               <div className="mt-0.5 text-xs text-muted-foreground">{r.desc}</div>
-            </button>
+            </div>
           ))}
         </div>
         <p className="mt-6 text-center text-xs text-muted-foreground">

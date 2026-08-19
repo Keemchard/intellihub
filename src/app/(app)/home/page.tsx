@@ -5,9 +5,9 @@ import { redirect } from "next/navigation";
 import { ProductCard } from "@/components/shared/product-card";
 import { Card } from "@/components/ui/card";
 import { Icon } from "@/components/shared/icon";
-import type { Product } from "@/types";
+import type { MarketplaceProduct } from "@/lib/bigquery-mappers";
 
-function Rail({ title, sub, items }: { title: string; sub?: string; items: Product[] }) {
+function Rail({ title, sub, items }: { title: string; sub?: string; items: MarketplaceProduct[] }) {
   if (!items.length) return null;
   return (
     <section className="mb-10">
@@ -16,7 +16,7 @@ function Rail({ title, sub, items }: { title: string; sub?: string; items: Produ
         <Link href="/marketplace" className="text-sm font-semibold text-primary hover:underline">Browse all →</Link>
       </div>
       <div data-stagger className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {items.slice(0, 3).map((p) => <ProductCard key={p.id} p={p} />)}
+        {items.slice(0, 3).map((p) => <ProductCard key={p.data_product_id} p={p} />)}
       </div>
     </section>
   );
@@ -27,9 +27,9 @@ export default async function HomePage() {
   if (!session) redirect("/login");
   const all = await listProducts(session.id);
   const access = await getMyAccessSummary(session.id);
-  const featured = all.filter((p) => p.certified);
-  const trending = [...all].sort((a, b) => b.rating - a.rating);
-  const recent = [...all].sort((a, b) => +new Date(b.updated) - +new Date(a.updated));
+  const featured = all.filter((p) => p.certification_status === "Certified");
+  const trending = all;
+  const recent = all;
 
   return (
     <div className="mx-auto max-w-7xl px-6 py-8">

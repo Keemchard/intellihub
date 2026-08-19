@@ -2,11 +2,10 @@
 import Link from "next/link";
 import { useMemo } from "react";
 import { useKpiDetail } from "@/features/bigquery/use-bigquery";
-import { fromKpiDetail, pickColor } from "@/lib/bigquery-mappers";
+import { enrichKpiDetail, pickColor } from "@/lib/bigquery-mappers";
 import { Card } from "@/components/ui/card";
 import { Icon } from "@/components/shared/icon";
-import { Avatar } from "@/components/shared/brand";
-import { TrustBadge, DqBadge, TrendChip } from "@/components/shared/badges";
+import { TrustBadge } from "@/components/shared/badges";
 import { DataHubButton } from "@/components/shared/datahub-button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/shared/empty-state";
@@ -15,14 +14,14 @@ export function KpiDetailClient({ id }: { id: string }) {
   const { data, isLoading } = useKpiDetail({ kpi_id: id, limit: 1 });
 
   const row = data?.data[0];
-  const kpi = useMemo(() => (row ? fromKpiDetail(row) : null), [row]);
+  const kpi = useMemo(() => (row ? enrichKpiDetail(row) : null), [row]);
 
   const relatedProducts = useMemo(
     () =>
       (row?.used_in_products ?? [])
         .filter((p) => p.slug ?? p.data_product_id)
         .map((p) => ({
-          id: p.slug ?? p.data_product_id ?? "",
+          id: p.data_product_id ?? p.slug ?? "",
           name: p.product_name ?? "",
           accent: pickColor(p.product_name),
         })),
@@ -59,6 +58,17 @@ export function KpiDetailClient({ id }: { id: string }) {
     );
   }
 
+  const ownerName = kpi.owner?.owner_name ?? "Unknown";
+  const ownerColor = pickColor(kpi.owner?.owner_id ?? ownerName);
+  const ownerInitials =
+    kpi.owner?.initials ??
+    ownerName
+      .split(/\s+/)
+      .map((w) => w[0] ?? "")
+      .join("")
+      .slice(0, 2)
+      .toUpperCase();
+
   return (
     <div className="mx-auto max-w-6xl px-6 py-8">
       <Link
@@ -72,53 +82,47 @@ export function KpiDetailClient({ id }: { id: string }) {
         <div className="min-w-0">
           <div className="mb-2 flex flex-wrap items-center gap-2">
             <span className="text-xs font-bold uppercase tracking-widest text-muted-foreground">
-              {kpi.category}
+              {kpi.kpi_category}
             </span>
-            <TrustBadge trust={kpi.trust} />
-            <DqBadge dq={kpi.dq} />
+            <TrustBadge trust={kpi.certification_status ?? ""} />
           </div>
           <h1 className="text-2xl font-extrabold tracking-tight">
-            {kpi.short}
+            {kpi.kpi_code ?? kpi.kpi_name}
           </h1>
-          <div className="mt-4 flex items-end gap-4">
+          {kpi.kpi_name && kpi.kpi_code && (
+            <p className="mt-1 text-sm text-muted-foreground">{kpi.kpi_name}</p>
+          )}
+          <div className="mt-4">
             <span
-              className="text-5xl font-extrabold tracking-tight"
-              style={{ color: kpi.accent }}
+              className="text-5xl font-extrabold tracking-tight text-muted-foreground/40"
+              title="Value coming in Phase 2"
             >
-              {kpi.value || "—"}
+              —
             </span>
-            {kpi.trend && (
-              <div className="pb-1">
-                <TrendChip trend={kpi.trend} dir={kpi.trendDir} />
-                <div className="text-xs text-muted-foreground">
-                  vs. previous period
-                </div>
-              </div>
-            )}
           </div>
 
           <Card className="mb-5 mt-6 p-6">
             <h2 className="mb-2 text-sm font-bold uppercase tracking-wide text-muted-foreground">
               Definition
             </h2>
-            <p className="text-[15px] leading-relaxed">{kpi.definition}</p>
-            {kpi.formula && (
+            <p className="text-[15px] leading-relaxed">{kpi.kpi_description}</p>
+            {kpi.kpi_formula && (
               <div className="mt-4 rounded-xl bg-muted/60 p-4">
                 <div className="text-xs font-bold uppercase tracking-wide text-muted-foreground">
                   Formula
                 </div>
                 <code className="mt-1 block font-mono text-sm text-foreground">
-                  {kpi.formula}
+                  {kpi.kpi_formula}
                 </code>
               </div>
             )}
-            {kpi.context && (
+            {(kpi.business_impact ?? kpi.interpretation_rules) && (
               <>
                 <h3 className="mb-1 mt-4 text-xs font-bold uppercase tracking-wide text-muted-foreground">
                   Business context
                 </h3>
                 <p className="text-sm leading-relaxed text-muted-foreground">
-                  {kpi.context}
+                  {kpi.business_impact ?? kpi.interpretation_rules}
                 </p>
               </>
             )}
@@ -183,16 +187,17 @@ export function KpiDetailClient({ id }: { id: string }) {
           <Card className="p-5">
             <h3 className="mb-3 text-sm font-bold">Ownership</h3>
             <div className="flex items-center gap-3">
-              <Avatar
-                name={kpi.ownerUser.name}
-                color={kpi.ownerUser.color}
-                size={34}
-              />
+              <div
+                className="grid h-9 w-9 shrink-0 place-items-center rounded-full text-sm font-bold text-white"
+                style={{ background: ownerColor }}
+              >
+                {ownerInitials}
+              </div>
               <div>
-                <div className="text-sm font-semibold">
-                  {kpi.ownerUser.name}
+                <div className="text-sm font-semibold">{ownerName}</div>
+                <div className="text-xs text-muted-foreground">
+                  {kpi.owner?.owner_team ?? "KPI Owner"}
                 </div>
-                <div className="text-xs text-muted-foreground">KPI Owner</div>
               </div>
             </div>
             <dl className="mt-4 grid grid-cols-2 gap-4 border-t border-border pt-4">
@@ -201,7 +206,7 @@ export function KpiDetailClient({ id }: { id: string }) {
                   Source
                 </dt>
                 <dd className="mt-0.5 text-sm font-semibold">
-                  {kpi.source || "—"}
+                  {kpi.primary_data_product_ids || "—"}
                 </dd>
               </div>
               <div>
@@ -209,16 +214,16 @@ export function KpiDetailClient({ id }: { id: string }) {
                   Frequency
                 </dt>
                 <dd className="mt-0.5 text-sm font-semibold">
-                  {kpi.frequency}
+                  {kpi.refresh_frequency ?? kpi.time_granularity ?? "—"}
                 </dd>
               </div>
-              {kpi.aggregation && (
+              {kpi.entity_granularity && (
                 <div className="col-span-2">
                   <dt className="text-xs font-semibold uppercase text-muted-foreground">
                     Aggregation
                   </dt>
                   <dd className="mt-0.5 text-sm font-semibold">
-                    {kpi.aggregation}
+                    {kpi.entity_granularity}
                   </dd>
                 </div>
               )}

@@ -27,17 +27,25 @@ export function middleware(req: NextRequest) {
 
   // Authenticated users never see the login screen.
   if (pathname === "/login") {
-    return session ? NextResponse.redirect(new URL("/home", req.url)) : NextResponse.next();
+    if (session) {
+      const url = req.nextUrl.clone();
+      url.pathname = "/home";
+      return NextResponse.redirect(url);
+    }
+    return NextResponse.next();
   }
 
   if (!session) {
-    const url = new URL("/login", req.url);
+    const url = req.nextUrl.clone();
+    url.pathname = "/login";
     url.searchParams.set("next", pathname + search); // preserve return URL
     return NextResponse.redirect(url);
   }
 
   if (!canAccessRoute(pathname, session.role)) {
-    return NextResponse.redirect(new URL("/home", req.url));
+    const url = req.nextUrl.clone();
+    url.pathname = "/home";
+    return NextResponse.redirect(url);
   }
 
   return NextResponse.next();

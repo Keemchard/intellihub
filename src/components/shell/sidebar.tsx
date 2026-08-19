@@ -45,16 +45,16 @@ export function Sidebar() {
 
       {!collapsed && (
         <div className="mt-7 px-3">
-          <div className="rounded-2xl bg-white/[0.04] p-4 ring-1 ring-white/10">
+          <div className="rounded-2xl bg-white/[0.04] p-4 ring-1 ring-white/10 opacity-40" title="Coming in Phase 2">
             <div className="mb-2 flex items-center gap-2">
-              <div className="grad-brand grid h-8 w-8 place-items-center rounded-xl"><Icon name="sparkles" size={16} /></div>
+              <div className="grid h-8 w-8 place-items-center rounded-xl bg-white/10"><Icon name="sparkles" size={16} /></div>
               <span className="text-sm font-bold">IntelliBot</span>
               <span className="rounded bg-white/10 px-1.5 py-0.5 text-[9px] font-bold tracking-wider text-white/80">BETA</span>
             </div>
             <p className="mb-3 text-xs leading-relaxed text-white/60">Ask questions and find the right analytics across NAI.</p>
-            <Link href="/intellibot" className="grad-brand block w-full rounded-xl py-2 text-center text-sm font-semibold text-white transition hover:brightness-110">
+            <div className="block w-full cursor-not-allowed rounded-xl bg-white/10 py-2 text-center text-sm font-semibold text-white/60 select-none">
               Ask IntelliBot
-            </Link>
+            </div>
           </div>
         </div>
       )}
