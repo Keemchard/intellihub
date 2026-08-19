@@ -67,7 +67,9 @@ export function TopBar({
   const results = searchData?.data ?? [];
 
   const logout = async () => {
-    await fetch(`${process.env.NEXT_PUBLIC_BASE_PATH}/api/auth/logout`, { method: "POST" });
+    await fetch(`${process.env.NEXT_PUBLIC_BASE_PATH}/api/auth/logout`, {
+      method: "POST",
+    });
     router.push("/login");
     router.refresh();
   };
@@ -173,7 +175,11 @@ export function TopBar({
 
       <div className="flex items-center gap-1.5">
         <ThemeToggle />
-        <button className="relative grid h-10 w-10 place-items-center rounded-xl text-muted-foreground transition hover:bg-muted hover:text-foreground ring-focus">
+        <button
+          disabled
+          title="Coming in Phase 2"
+          className="relative grid h-10 w-10 cursor-not-allowed place-items-center rounded-xl opacity-40"
+        >
           <Icon name="bell" size={19} />
           <span className="absolute right-1.5 top-1.5 grid h-[15px] min-w-[15px] place-items-center rounded-full bg-rose-500 px-1 text-[9px] font-bold text-white ring-2 ring-background">
             3
@@ -181,7 +187,11 @@ export function TopBar({
         </button>
         <div className="mx-1.5 h-7 w-px bg-border" />
         <DropdownMenu>
-          <DropdownMenuTrigger className="ring-focus flex cursor-not-allowed items-center gap-2.5 rounded-xl py-1 pl-1 pr-2 opacity-40" title="Coming in Phase 2" disabled>
+          <DropdownMenuTrigger
+            className="ring-focus flex cursor-not-allowed items-center gap-2.5 rounded-xl py-1 pl-1 pr-2 opacity-40"
+            title="Coming in Phase 2"
+            disabled
+          >
             <Avatar name={user.name} color={user.color} size={36} />
             <div className="hidden text-left leading-tight md:block">
               <div className="text-[13px] font-bold text-foreground">
