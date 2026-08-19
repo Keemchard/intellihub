@@ -38,7 +38,9 @@ function MetaItem({ label, value }: { label: string; value: string }) {
       <dt className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
         {label}
       </dt>
-      <dd className="mt-0.5 text-sm font-semibold text-foreground">{value || "—"}</dd>
+      <dd className="mt-0.5 text-sm font-semibold text-foreground">
+        {value || "—"}
+      </dd>
     </div>
   );
 }
@@ -51,6 +53,8 @@ interface KpiItem {
   certificationStatus: string;
   status: string;
   accent: string;
+  code: string;
+  description: string;
 }
 
 function KpiRow({ kpi }: { kpi: KpiItem }) {
@@ -66,7 +70,10 @@ function KpiRow({ kpi }: { kpi: KpiItem }) {
         <Icon name="badge-check" size={22} />
       </div>
       <div className="min-w-0 flex-1">
-        <div className="text-sm font-semibold text-foreground">{kpi.name}</div>
+        <div className="text-sm font-semibold text-foreground">{kpi.code}</div>
+        <div className="mt-0.5 flex flex-wrap gap-x-4 gap-y-0.5 text-sm text-muted-foreground">
+          {kpi.description && <span>{kpi.description}</span>}
+        </div>
         <div className="mt-0.5 flex flex-wrap gap-x-4 gap-y-0.5 text-xs text-muted-foreground">
           {kpi.category && <span>{kpi.category}</span>}
           {kpi.unit && <span>{kpi.unit}</span>}
@@ -122,6 +129,8 @@ export function ProductDetailClient({ id }: { id: string }) {
           certificationStatus: k.certification_status ?? "",
           status: k.kpi_status ?? "",
           accent: pickColor(k.kpi_id),
+          code: k.kpi_code ?? "",
+          description: k.kpi_description ?? "",
         })),
     [product],
   );
@@ -160,7 +169,12 @@ export function ProductDetailClient({ id }: { id: string }) {
   const ownerColor = pickColor(product.owner?.owner_id ?? ownerName);
   const ownerInitials =
     product.owner?.owner_initials ??
-    ownerName.split(/\s+/).map((w) => w[0] ?? "").join("").slice(0, 2).toUpperCase();
+    ownerName
+      .split(/\s+/)
+      .map((w) => w[0] ?? "")
+      .join("")
+      .slice(0, 2)
+      .toUpperCase();
 
   return (
     <div className="mx-auto max-w-6xl px-6 py-8">
@@ -185,7 +199,9 @@ export function ProductDetailClient({ id }: { id: string }) {
             </div>
             <div className="min-w-0">
               <div className="mb-2 flex flex-wrap items-center gap-2">
-                {product.productTypes.map((t) => <TypePill key={t} type={t} />)}
+                {product.productTypes.map((t) => (
+                  <TypePill key={t} type={t} />
+                ))}
                 <TrustBadge trust={product.certification_status ?? ""} />
               </div>
               <h1 className="text-2xl font-extrabold tracking-tight">
@@ -310,16 +326,27 @@ export function ProductDetailClient({ id }: { id: string }) {
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-4 border-t border-border pt-4">
-                <MetaItem label="Domain" value={product.domain?.domain_name ?? ""} />
+                <MetaItem
+                  label="Domain"
+                  value={product.domain?.domain_name ?? ""}
+                />
                 <MetaItem label="Segment" value={product.segments ?? ""} />
                 <MetaItem label="Territory" value="National" />
-                <MetaItem label="Refresh" value={product.refresh_frequency ?? ""} />
+                <MetaItem
+                  label="Refresh"
+                  value={product.refresh_frequency ?? ""}
+                />
                 {product.last_updated_at?.value && (
-                  <MetaItem label="Updated" value={formatDate(product.last_updated_at.value)} />
+                  <MetaItem
+                    label="Updated"
+                    value={formatDate(product.last_updated_at.value)}
+                  />
                 )}
                 <MetaItem
                   label="Owner team"
-                  value={product.owner?.owner_team ?? product.owner?.owner_name ?? ""}
+                  value={
+                    product.owner?.owner_team ?? product.owner?.owner_name ?? ""
+                  }
                 />
               </div>
             </dl>

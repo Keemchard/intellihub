@@ -78,6 +78,8 @@ export interface DSDataProductDetailRow {
     kpi_unit: string | null;
     certification_status: string | null;
     kpi_status: string | null;
+    kpi_code: string | null;
+    kpi_description: string | null;
   }> | null;
 }
 
@@ -161,7 +163,10 @@ export interface DSSearchIndexRow {
 
 type Params = Record<string, string | number | undefined>;
 
-async function bqGet<T>(endpoint: string, params: Params = {}): Promise<BqPage<T>> {
+async function bqGet<T>(
+  endpoint: string,
+  params: Params = {},
+): Promise<BqPage<T>> {
   if (!BASE || !API_KEY) {
     throw new Error(
       "BigQuery API not configured — set INTELLIHUB_API_URL and INTELLIHUB_API_KEY in .env",
