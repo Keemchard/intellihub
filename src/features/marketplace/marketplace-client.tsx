@@ -112,7 +112,7 @@ export function MarketplaceClient() {
     const params: Record<string, string> = {};
     sp.forEach((value, key) => {
       if (key === "q" || key === "segments") return;
-      if (key === "product_type" && (value === "all" || value === "kpi"))
+      if (key === "product_type" && (value === "all" || value === "kpi" || value === "dataproduct"))
         return;
       params[key] = value;
     });
