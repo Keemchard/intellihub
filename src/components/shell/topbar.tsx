@@ -175,7 +175,7 @@ export function TopBar({
 
       <div className="flex items-center gap-1.5">
         <ThemeToggle />
-        <button
+        {/* <button
           disabled
           title="Coming in Phase 2"
           className="relative grid h-10 w-10 cursor-not-allowed place-items-center rounded-xl opacity-40"
@@ -184,7 +184,7 @@ export function TopBar({
           <span className="absolute right-1.5 top-1.5 grid h-[15px] min-w-[15px] place-items-center rounded-full bg-rose-500 px-1 text-[9px] font-bold text-white ring-2 ring-background">
             3
           </span>
-        </button>
+        </button> */}
         <div className="mx-1.5 h-7 w-px bg-border" />
         <DropdownMenu>
           <DropdownMenuTrigger
