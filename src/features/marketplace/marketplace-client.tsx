@@ -25,8 +25,8 @@ const TYPE_TABS = [
   { id: "all", label: "All" },
   { id: "dashboard", label: "Dashboards" },
   { id: "dataproduct", label: "Data Products" },
-  { id: "kpi", label: "KPIs" },
   { id: "report", label: "Reports" },
+  { id: "kpi", label: "KPIs" },
 ];
 
 export const ENTITY_ICONS: Record<string, string> = {
@@ -112,7 +112,10 @@ export function MarketplaceClient() {
     const params: Record<string, string> = {};
     sp.forEach((value, key) => {
       if (key === "q" || key === "segments") return;
-      if (key === "product_type" && (value === "all" || value === "kpi" || value === "dataproduct"))
+      if (
+        key === "product_type" &&
+        (value === "all" || value === "kpi" || value === "dataproduct")
+      )
         return;
       params[key] = value;
     });
@@ -136,7 +139,9 @@ export function MarketplaceClient() {
     if (domains.length)
       out = out.filter((p) => domains.includes(p.domain_name ?? ""));
     if (segments.length)
-      out = out.filter((p) => segments.some((s) => (p.segments ?? "").includes(s)));
+      out = out.filter((p) =>
+        segments.some((s) => (p.segments ?? "").includes(s)),
+      );
     if (certs.length)
       out = out.filter((p) =>
         certs.some((c) =>
