@@ -103,7 +103,7 @@ export function MarketplaceClient() {
         ),
       ].sort(),
       segments: ["Consumer", "B2B", "VIP"],
-      certification: ["Certified", "Validated", "Ongoing Review"],
+      certification: ["Certified", "Validated", "Ongoing Review", "Deprecated"],
       tags: [...new Set(rows.flatMap((r) => r.tags ?? []))].sort(),
     };
   }, [facetData]);
@@ -144,8 +144,11 @@ export function MarketplaceClient() {
             ? p.certification_status === "Certified"
             : c === "Validated"
               ? p.certification_status === "Validated"
-              : p.certification_status !== "Certified" &&
-                p.certification_status !== "Validated",
+              : c === "Deprecated"
+                ? p.certification_status === "Deprecated"
+                : p.certification_status !== "Certified" &&
+                  p.certification_status !== "Validated" &&
+                  p.certification_status !== "Deprecated",
         ),
       );
     return out;
