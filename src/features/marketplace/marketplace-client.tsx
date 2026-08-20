@@ -98,9 +98,11 @@ export function MarketplaceClient() {
     const rows = facetData?.data ?? [];
     return {
       domains: [
-        ...new Set(
-          rows.map((r) => r.domain_name).filter((d): d is string => !!d),
-        ),
+        ...new Set([
+          "B2B",
+          "Broadband",
+          ...rows.map((r) => r.domain_name).filter((d): d is string => !!d),
+        ]),
       ].sort(),
       segments: ["Consumer", "B2B", "VIP"],
       certification: ["Certified", "Validated", "Ongoing Review", "Deprecated"],
@@ -171,6 +173,19 @@ export function MarketplaceClient() {
   const allKpis = useMemo(
     () => (kpiPages?.pages.flatMap((p) => p.data) ?? []).map(enrichKpiDetail),
     [kpiPages],
+  );
+
+  const allKpisMetadata = useMemo(
+    () =>
+      (kpiPages?.pages.flatMap((p) => p.meta) ?? []).map((m) => ({
+        ...m,
+      })),
+    [kpiPages],
+  );
+
+  const kpisTotalCount = allKpisMetadata.reduce(
+    (sum, m) => sum + m.totalCount,
+    0,
   );
 
   const activeFilters = domains.length + segments.length + certs.length;
@@ -378,7 +393,7 @@ export function MarketplaceClient() {
                     </h2>
                     <span className="text-xs text-slate-300">·</span>
                     <span className="text-xs text-slate-400">
-                      {allKpis.length}
+                      {kpisTotalCount}
                     </span>
                   </div>
                   <div
